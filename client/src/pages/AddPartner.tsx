@@ -139,7 +139,7 @@ export default function AddPartner() {
         console.log("Created user for invite link generation:", dbUser);
       }
       
-      const link = telegramService.generateInviteLink(tgUser.id.toString());
+      const link = await telegramService.generateInviteLink(tgUser.id.toString());
       setInviteLink(link);
     } catch (error) {
       console.error("Failed to ensure user exists for invite link:", error);
@@ -261,12 +261,34 @@ export default function AddPartner() {
             </h4>
             <ol className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
               <li>1. Скопируйте ссылку-приглашение</li>
-              <li>2. Отправьте её своему партнёру</li>
-              <li>3. Партнёр переходит по ссылке</li>
-              <li>4. Начинайте играть вместе!</li>
+              <li>2. Отправьте её своему партнёру в Telegram</li>
+              <li>3. Партнёр нажимает на ссылку и открывает бота</li>
+              <li>4. Бот автоматически запускает WebApp с параметром приглашения</li>
+              <li>5. Партнёр добавляется автоматически - никаких дополнительных действий!</li>
+              <li>6. Начинайте играть вместе!</li>
             </ol>
           </CardContent>
         </Card>
+
+        {/* Development Testing Section */}
+        {telegramService.isDevelopment && (
+          <Card className="bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 mt-4">
+            <CardContent className="p-4">
+              <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+                🧪 Режим разработки
+              </h4>
+              <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
+                В режиме разработки вы можете протестировать пригласительную ссылку, открыв её в новой вкладке.
+                Это имитирует поведение, когда партнёр переходит по ссылке.
+              </p>
+              <div className="text-xs text-yellow-600 dark:text-yellow-400 space-y-1">
+                <p>• В новой вкладке будет другой пользователь (testUserId)</p>
+                <p>• Связь между пользователями создастся автоматически</p>
+                <p>• Можно тестировать весь флоу приглашений</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

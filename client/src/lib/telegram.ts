@@ -227,17 +227,35 @@ class TelegramService {
     this.tg.sendData(JSON.stringify(data));
   }
 
-  generateInviteLink(userId: string): string {
-    // This would use the actual bot username from environment
-    const botUsername = import.meta.env.VITE_BOT_USERNAME || 'duolove_bot';
-    
+  async generateInviteLink(userId: string): Promise<string> {
     if (this.isDevelopment) {
       // In development, generate a link that can be tested in the same app
       const currentUrl = window.location.origin;
       return `${currentUrl}?start=invite_${userId}&testUserId=${parseInt(userId) + 1}`;
     }
     
-    return `https://t.me/${botUsername}?start=invite_${userId}`;
+    try {
+      // Use server API to generate invite link
+      const response = await fetch('/api/invite/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate invite link');
+      }
+      
+      const data = await response.json();
+      return data.inviteLink;
+    } catch (error) {
+      console.error('Error generating invite link:', error);
+      // Fallback to manual generation
+      const botUsername = import.meta.env.VITE_BOT_USERNAME || 'duolove_bot';
+      return `https://t.me/${botUsername}?start=invite_${userId}`;
+    }
   }
 
   async shareInviteLink(link: string): Promise<void> {

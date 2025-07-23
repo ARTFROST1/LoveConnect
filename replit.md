@@ -20,11 +20,12 @@ Preferred communication style: Simple, everyday language.
 - **Telegram Integration**: Direct Telegram WebApp API integration for native platform features
 
 ### Backend Architecture
-- **Server Framework**: Express.js with TypeScript for API endpoints (currently minimal)
+- **Server Framework**: Express.js with TypeScript for API endpoints and Telegram Bot integration
+- **Telegram Bot**: node-telegram-bot-api integration for handling invite links and WebApp launching
 - **Database Strategy**: Client-side SQLite using sql.js for local data storage
 - **Data Persistence**: LocalStorage as backup for SQLite database
 - **Session Management**: In-memory storage implementation with extensible interface
-- **API Design**: RESTful endpoints with `/api` prefix (prepared for future expansion)
+- **API Design**: RESTful endpoints with `/api` prefix including invite generation and bot management
 
 ### Data Storage Solutions
 - **Primary Database**: SQLite via sql.js running in the browser
@@ -51,7 +52,9 @@ Preferred communication style: Simple, everyday language.
 - **Theme Support**: Light/dark mode following Telegram app theme
 
 ### Telegram Integration
-- **WebApp API**: Full integration with Telegram WebApp features
+- **WebApp API**: Full integration with Telegram WebApp features with start_param processing
+- **Telegram Bot**: Complete bot implementation for handling invite links and launching WebApp
+- **Deep Link System**: Automatic partner invitation processing via https://t.me/bot?start=invite_{user_id}
 - **Haptic Feedback**: Touch feedback for enhanced user experience
 - **Main Button**: Context-aware primary action button
 - **Back Button**: Navigation support with Telegram's back button
@@ -66,10 +69,11 @@ Preferred communication style: Simple, everyday language.
 4. User profile is created or retrieved from local storage
 
 ### Partner Connection
-1. User generates invite link with unique identifier
-2. Partner opens link, triggering partner invitation flow
-3. Both users are connected in local databases
-4. Partner relationship is established for game access
+1. User generates deep-link invite via Telegram Bot API
+2. Partner clicks link → Telegram Bot receives /start invite_{user_id}
+3. Bot launches WebApp with start_param containing invitation data
+4. WebApp automatically processes invitation and creates bidirectional partnership
+5. Both users are connected in local databases with automatic relationship establishment
 
 ### Game Sessions
 1. User selects game from categorized list
