@@ -26,7 +26,6 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/add-partner" component={AddPartner} />
         <Route path="/games" component={GameList} />
-        <Route path="/games/*" component={GameList} /> {/* Handle /games with query params */}
         <Route path="/game/:gameId" component={GameRoom} />
         <Route path="/history" component={History} />
         <Route path="/profile" component={Home} /> {/* Profile redirects to home for now */}
