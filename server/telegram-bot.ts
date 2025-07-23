@@ -90,8 +90,9 @@ class DuoLoveTelegramBot {
     });
 
     try {
-      // Create WebApp URL with start parameter for partner invitation  
-      const webAppUrl = `${this.webAppUrl}?tgWebAppStartParam=${startParam}`;
+      // Create WebApp URL with start parameter for partner invitation
+      // Use /games path since that's what's configured in BotFather
+      const webAppUrl = `${this.webAppUrl}/games?tgWebAppStartParam=${startParam}`;
       
       const keyboard = {
         inline_keyboard: [[
@@ -123,7 +124,8 @@ class DuoLoveTelegramBot {
     if (!this.bot) return;
 
     try {
-      const webAppUrl = this.webAppUrl;
+      // Use /games path since that's what's configured in BotFather  
+      const webAppUrl = `${this.webAppUrl}/games`;
       
       const keyboard = {
         inline_keyboard: [[

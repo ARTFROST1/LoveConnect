@@ -3,6 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Brain, Bolt, Map, Calendar, Users, ChevronRight } from "lucide-react";
 import { telegramService } from "@/lib/telegram";
 import { GameConfig } from "@/types/models";
+import { useInviteProcessing } from "@/hooks/use-invite-processing";
+import { useEffect } from "react";
 
 const gameConfigs: GameConfig[] = [
   {
@@ -82,6 +84,17 @@ const getBorderColor = (color: string) => {
 
 export default function GameList() {
   const [, setLocation] = useLocation();
+  
+  // Process invites if present
+  const { isProcessing: isProcessingInvite } = useInviteProcessing();
+  
+  useEffect(() => {
+    // Log when GameList is loaded to debug WebApp access
+    console.log('GameList loaded, checking for Telegram parameters:', {
+      startParam: telegramService.startParam,
+      userAvailable: !!telegramService.user
+    });
+  }, []);
 
   const handleGameSelect = (gameId: string) => {
     telegramService.hapticFeedback('selection');
@@ -94,6 +107,18 @@ export default function GameList() {
     quest: gameConfigs.filter(game => game.category === 'quest'),
     challenge: gameConfigs.filter(game => game.category === 'challenge')
   };
+
+  // Show processing state if invite is being processed
+  if (isProcessingInvite) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Обрабатываем приглашение...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 pb-20">
