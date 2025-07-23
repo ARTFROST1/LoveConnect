@@ -37,9 +37,12 @@ export function useInviteProcessing(): InviteProcessingResult {
       
       if (!startParam || !startParam.startsWith('invite_')) {
         console.log('No valid invite parameter found');
+        // No invite to process - this is normal, not an error
+        setInviteProcessed(false);
         return;
       }
 
+      console.log('Found valid invite parameter, starting processing...');
       setIsProcessing(true);
       setError(null);
 
@@ -110,11 +113,15 @@ export function useInviteProcessing(): InviteProcessingResult {
       console.error('Error processing invite:', err);
       setError(errorMessage);
       
-      toast({
-        title: "Ошибка",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      // Only show toast error if we actually had an invite to process
+      const startParam = await telegramService.getStartParamWithRetry();
+      if (startParam && startParam.startsWith('invite_')) {
+        toast({
+          title: "Ошибка",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsProcessing(false);
     }
