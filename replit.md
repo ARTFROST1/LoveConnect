@@ -53,8 +53,11 @@ Preferred communication style: Simple, everyday language.
 
 ### Telegram Integration
 - **WebApp API**: Full integration with Telegram WebApp features with start_param processing
-- **Telegram Bot**: Complete bot implementation for handling invite links and launching WebApp
-- **Deep Link System**: Automatic partner invitation processing via https://t.me/bot?start=invite_{user_id}
+- **Telegram Bot**: Complete bot implementation (@duolove_bot) for handling invite links and launching WebApp
+- **Deep Link System**: Automatic partner invitation processing via https://t.me/duolove_bot?start=invite_{user_id}
+- **Auto-Invite Processing**: Automatic partner connection when users click invite links
+- **Bidirectional Partnerships**: Mutual partner relationships created automatically
+- **HTTPS WebApp URLs**: Proper Replit.app domain integration for Telegram WebApp compatibility
 - **Haptic Feedback**: Touch feedback for enhanced user experience
 - **Main Button**: Context-aware primary action button
 - **Back Button**: Navigation support with Telegram's back button
@@ -69,11 +72,13 @@ Preferred communication style: Simple, everyday language.
 4. User profile is created or retrieved from local storage
 
 ### Partner Connection
-1. User generates deep-link invite via Telegram Bot API
-2. Partner clicks link → Telegram Bot receives /start invite_{user_id}
+1. User generates deep-link invite via Telegram Bot API (@duolove_bot)
+2. Partner clicks link → Telegram Bot receives /start invite_{user_id}  
 3. Bot launches WebApp with start_param containing invitation data
-4. WebApp automatically processes invitation and creates bidirectional partnership
-5. Both users are connected in local databases with automatic relationship establishment
+4. WebApp automatically processes invitation using useInviteProcessing hook
+5. Bidirectional partnership created in both users' local SQLite databases
+6. Success notification shown with haptic feedback
+7. Both users can immediately start playing games together
 
 ### Game Sessions
 1. User selects game from categorized list

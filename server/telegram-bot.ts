@@ -7,11 +7,9 @@ class DuoLoveTelegramBot {
 
   constructor() {
     this.isDevelopment = process.env.NODE_ENV === 'development';
-    this.webAppUrl = process.env.WEBAPP_URL || (
-      this.isDevelopment 
-        ? 'http://localhost:5000' 
-        : 'https://your-app.replit.app'
-    );
+    // For Replit, always use HTTPS since we're in a cloud environment
+    this.webAppUrl = process.env.WEBAPP_URL || 
+      `https://${process.env.REPL_SLUG || 'duolove'}-${process.env.REPL_OWNER || 'user'}.replit.app`;
     
     console.log('Telegram Bot: Initializing...');
     console.log('Environment:', this.isDevelopment ? 'development' : 'production');
