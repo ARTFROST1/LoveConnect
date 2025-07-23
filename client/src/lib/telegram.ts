@@ -70,11 +70,18 @@ declare global {
 
 class TelegramService {
   private tg: TelegramWebApp | null = null;
+  private isDevelopment: boolean = false;
 
   constructor() {
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      this.tg = window.Telegram.WebApp;
-      this.initialize();
+    if (typeof window !== 'undefined') {
+      if (window.Telegram?.WebApp) {
+        this.tg = window.Telegram.WebApp;
+        this.initialize();
+      } else {
+        // Development mode - create mock user data
+        this.isDevelopment = true;
+        console.log('Running in development mode - using mock Telegram data');
+      }
     }
   }
 
@@ -96,15 +103,37 @@ class TelegramService {
   }
 
   get isAvailable(): boolean {
-    return this.tg !== null;
+    return this.tg !== null || this.isDevelopment;
   }
 
   get user() {
-    return this.tg?.initDataUnsafe?.user || null;
+    if (this.tg?.initDataUnsafe?.user) {
+      return this.tg.initDataUnsafe.user;
+    }
+    
+    // Development fallback
+    if (this.isDevelopment) {
+      return {
+        id: 123456789,
+        first_name: "Тестовый",
+        last_name: "Пользователь",
+        username: "test_user",
+        language_code: "ru",
+        photo_url: null
+      };
+    }
+    
+    return null;
   }
 
   get startParam() {
-    return this.tg?.initDataUnsafe?.start_param || null;
+    if (this.tg?.initDataUnsafe?.start_param) {
+      return this.tg.initDataUnsafe.start_param;
+    }
+    
+    // Check URL params for development
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('tgWebAppStartParam') || null;
   }
 
   get colorScheme() {
@@ -112,45 +141,55 @@ class TelegramService {
   }
 
   showMainButton(text: string, onClick: () => void): void {
-    if (!this.tg) return;
-
-    this.tg.MainButton.setText(text);
-    this.tg.MainButton.onClick(onClick);
-    this.tg.MainButton.show();
+    if (this.tg) {
+      this.tg.MainButton.setText(text);
+      this.tg.MainButton.onClick(onClick);
+      this.tg.MainButton.show();
+    }
+    // In development mode, we don't show the button but log it
+    else if (this.isDevelopment) {
+      console.log(`Main button would show: ${text}`);
+    }
   }
 
   hideMainButton(): void {
-    if (!this.tg) return;
-    this.tg.MainButton.hide();
+    if (this.tg) {
+      this.tg.MainButton.hide();
+    }
   }
 
   showBackButton(onClick?: () => void): void {
-    if (!this.tg) return;
-
-    if (onClick) {
-      this.tg.BackButton.onClick(onClick);
+    if (this.tg) {
+      if (onClick) {
+        this.tg.BackButton.onClick(onClick);
+      }
+      this.tg.BackButton.show();
     }
-    this.tg.BackButton.show();
   }
 
   hideBackButton(): void {
-    if (!this.tg) return;
-    this.tg.BackButton.hide();
+    if (this.tg) {
+      this.tg.BackButton.hide();
+    }
   }
 
   hapticFeedback(type: 'impact' | 'notification' | 'selection', style?: string): void {
-    if (!this.tg) return;
-
-    switch (type) {
-      case 'impact':
-        this.tg.HapticFeedback.impactOccurred(style as any || 'medium');
-        break;
-      case 'notification':
-        this.tg.HapticFeedback.notificationOccurred(style as any || 'success');
-        break;
-      case 'selection':
-        this.tg.HapticFeedback.selectionChanged();
-        break;
+    if (this.tg) {
+      switch (type) {
+        case 'impact':
+          this.tg.HapticFeedback.impactOccurred(style as any || 'medium');
+          break;
+        case 'notification':
+          this.tg.HapticFeedback.notificationOccurred(style as any || 'success');
+          break;
+        case 'selection':
+          this.tg.HapticFeedback.selectionChanged();
+          break;
+      }
+    }
+    // In development mode, just log the feedback
+    else if (this.isDevelopment) {
+      console.log(`Haptic feedback: ${type} ${style || ''}`);
     }
   }
 

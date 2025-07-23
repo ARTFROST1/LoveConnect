@@ -99,11 +99,14 @@ class SQLiteDatabase {
     return Object.keys(result).length > 0 ? result : null;
   }
 
-  async createUser(telegramId: string, name: string, avatar?: string): Promise<any> {
+  async createUser(telegramId: string, name: string, avatar?: string | null): Promise<any> {
     if (!this.db) await this.initialize();
     
+    console.log('Creating user:', { telegramId, name, avatar });
+    const avatarValue = avatar === undefined ? null : avatar;
+    
     const stmt = this.db!.prepare('INSERT INTO users (telegram_id, name, avatar) VALUES (?, ?, ?)');
-    stmt.run([telegramId, name, avatar || null]);
+    stmt.run([telegramId, name, avatarValue]);
     stmt.free();
     
     this.saveDatabase();
@@ -120,7 +123,7 @@ class SQLiteDatabase {
     return Object.keys(result).length > 0 ? result : null;
   }
 
-  async addPartner(userId: number, partnerTelegramId: string, partnerName: string, partnerAvatar?: string): Promise<any> {
+  async addPartner(userId: number, partnerTelegramId: string, partnerName: string, partnerAvatar?: string | null): Promise<any> {
     if (!this.db) await this.initialize();
     
     const connectedAt = new Date().toISOString();

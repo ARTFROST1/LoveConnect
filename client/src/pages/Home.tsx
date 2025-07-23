@@ -38,7 +38,7 @@ export default function Home() {
         dbUser = await database.createUser(
           tgUser.id.toString(),
           `${tgUser.first_name} ${tgUser.last_name || ''}`.trim(),
-          tgUser.photo_url
+          tgUser.photo_url || null
         );
       }
 
