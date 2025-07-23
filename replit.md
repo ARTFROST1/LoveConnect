@@ -8,6 +8,15 @@ DuoLove is a Telegram WebApp designed for couples, friends, and family members t
 
 Preferred communication style: Simple, everyday language.
 
+## Current Issues & Solutions
+
+### WebApp "Not Found" Error (Fixed)
+**Problem**: When users click the WebApp button after accepting an invite, they get a "Not Found" error.
+**Root Cause**: BotFather WebApp URL was incorrectly set to include `/games` path.
+**Solution**: Update BotFather settings to use correct URL: `https://workspace-art061.replit.app` (without any path).
+
+**Date**: July 23, 2025 - Issue identified and solution provided.
+
 ## System Architecture
 
 ### Frontend Architecture

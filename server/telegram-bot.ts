@@ -14,6 +14,7 @@ class DuoLoveTelegramBot {
     console.log('Telegram Bot: Initializing...');
     console.log('Environment:', this.isDevelopment ? 'development' : 'production');
     console.log('WebApp URL:', this.webAppUrl);
+    console.log('Full WebApp URL for BotFather:', this.webAppUrl);
     
     // Initialize bot if we have a token
     this.initializeBot();
@@ -89,7 +90,7 @@ class DuoLoveTelegramBot {
     });
 
     try {
-      // Create WebApp URL with start parameter for partner invitation
+      // Create WebApp URL with start parameter for partner invitation  
       const webAppUrl = `${this.webAppUrl}?tgWebAppStartParam=${startParam}`;
       
       const keyboard = {
