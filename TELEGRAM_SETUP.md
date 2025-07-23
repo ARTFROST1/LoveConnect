@@ -6,16 +6,13 @@
 В настройках бота @duolove_bot в BotFather должен быть указан следующий URL:
 
 ```
-https://workspace-art061.replit.app
+https://93828f49-b7a4-4135-ba2e-9d9278d7ea0d-00-11q6gmkwtm0pq.riker.replit.dev
 ```
 
 ⚠️ **ВАЖНО**: НЕ добавляйте `/games` или любой другой путь в конце URL!
 
-### URL Несоответствие
-Пользователь указал URL: `https://93828f49-b7a4-4135-ba2e-9d9278d7ea0d-00-11q6gmkwtm0pq.riker.replit.dev/`
-Текущий Replit URL: `https://workspace-art061.replit.app`
-
-**Причина "Not Found" ошибки**: URL в BotFather указывает на старый/неправильный домен!
+### URL Исправлен
+Обновили систему для использования рабочего Replit dev URL: `https://93828f49-b7a4-4135-ba2e-9d9278d7ea0d-00-11q6gmkwtm0pq.riker.replit.dev`
 
 ### Пошаговая настройка в BotFather:
 

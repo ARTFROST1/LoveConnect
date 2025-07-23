@@ -12,10 +12,10 @@ Preferred communication style: Simple, everyday language.
 
 ### WebApp "Not Found" Error (Fixed)
 **Problem**: When users click the WebApp button after accepting an invite, they get a "Not Found" error.
-**Root Cause**: BotFather WebApp URL was incorrectly set to include `/games` path.
-**Solution**: Update BotFather settings to use correct URL: `https://workspace-art061.replit.app` (without any path).
+**Root Cause**: System was configured with wrong Replit URL.
+**Solution**: Updated system to use correct working URL: `https://93828f49-b7a4-4135-ba2e-9d9278d7ea0d-00-11q6gmkwtm0pq.riker.replit.dev`
 
-**Date**: July 23, 2025 - Issue identified and solution provided.
+**Date**: July 23, 2025 - Issue fixed by updating WebApp URL in system.
 
 ## System Architecture
 
