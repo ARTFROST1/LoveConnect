@@ -205,7 +205,7 @@ class TelegramService {
 
   generateInviteLink(userId: string): string {
     // This would use the actual bot username from environment
-    const botUsername = process.env.VITE_BOT_USERNAME || 'duolove_bot';
+    const botUsername = import.meta.env.VITE_BOT_USERNAME || 'duolove_bot';
     return `https://t.me/${botUsername}?start=invite_${userId}`;
   }
 

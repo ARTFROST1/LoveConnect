@@ -35,10 +35,16 @@ export default function Home() {
       
       if (!dbUser) {
         // Create new user
+        console.log('Creating user with data:', {
+          id: tgUser.id.toString(),
+          name: `${tgUser.first_name} ${tgUser.last_name || ''}`.trim(),
+          avatar: tgUser.photo_url
+        });
+        
         dbUser = await database.createUser(
           tgUser.id.toString(),
           `${tgUser.first_name} ${tgUser.last_name || ''}`.trim(),
-          tgUser.photo_url || null
+          tgUser.photo_url === undefined ? null : tgUser.photo_url
         );
       }
 
