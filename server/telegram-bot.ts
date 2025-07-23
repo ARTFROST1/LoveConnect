@@ -90,14 +90,13 @@ class DuoLoveTelegramBot {
     });
 
     try {
-      // Create WebApp URL with start parameter for partner invitation  
-      const webAppUrl = `${this.webAppUrl}?tgWebAppStartParam=${startParam}`;
-      
+      // For Telegram WebApp, the start_param is automatically passed 
+      // when user clicks on the web_app button, no need to add it to URL
       const keyboard = {
         inline_keyboard: [[
           {
             text: '🎮 Открыть DuoLove',
-            web_app: { url: webAppUrl }
+            web_app: { url: this.webAppUrl }
           }
         ]]
       };

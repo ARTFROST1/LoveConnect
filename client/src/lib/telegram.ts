@@ -71,6 +71,7 @@ declare global {
 class TelegramService {
   private tg: TelegramWebApp | null = null;
   public isDevelopment: boolean = false;
+  private isInitialized: boolean = false;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -86,6 +87,7 @@ class TelegramService {
         // Development mode - create mock user data
         this.isDevelopment = true;
         console.log('Running in development mode - using mock Telegram data');
+        this.isInitialized = true;
       }
     }
   }
@@ -107,6 +109,31 @@ class TelegramService {
         window.history.back();
       });
     }
+
+    // Log initial state for debugging
+    console.log('Telegram WebApp initialized:', {
+      version: this.tg.version,
+      initData: this.tg.initData,
+      initDataUnsafe: this.tg.initDataUnsafe,
+      startParam: this.tg.initDataUnsafe?.start_param
+    });
+
+    this.isInitialized = true;
+  }
+
+  // Wait for Telegram WebApp to be fully initialized
+  async waitForInitialization(maxWaitMs: number = 3000): Promise<boolean> {
+    if (this.isInitialized) return true;
+    
+    return new Promise((resolve) => {
+      const startTime = Date.now();
+      const checkInterval = setInterval(() => {
+        if (this.isInitialized || (Date.now() - startTime) > maxWaitMs) {
+          clearInterval(checkInterval);
+          resolve(this.isInitialized);
+        }
+      }, 100);
+    });
   }
 
   get isAvailable(): boolean {
@@ -151,13 +178,50 @@ class TelegramService {
   }
 
   get startParam() {
+    // First try to get from Telegram WebApp
     if (this.tg?.initDataUnsafe?.start_param) {
+      console.log('Found start_param from Telegram WebApp:', this.tg.initDataUnsafe.start_param);
       return this.tg.initDataUnsafe.start_param;
     }
     
-    // Check URL params for development
+    // Check URL params for both development and as fallback
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('tgWebAppStartParam') || urlParams.get('start') || null;
+    let startParam = urlParams.get('tgWebAppStartParam') || urlParams.get('start') || null;
+    
+    // In development mode, also check for manually added invite parameter
+    if (!startParam && this.isDevelopment) {
+      startParam = urlParams.get('invite') || null;
+    }
+    
+    if (startParam) {
+      console.log('Found start_param from URL:', startParam);
+    }
+    
+    return startParam;
+  }
+
+  // Get start param with retry logic for better reliability
+  async getStartParamWithRetry(maxRetries: number = 3, delayMs: number = 500): Promise<string | null> {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      const startParam = this.startParam;
+      if (startParam) {
+        return startParam;
+      }
+      
+      // Wait before next attempt
+      if (attempt < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        
+        // Log current state for debugging
+        console.log(`Attempt ${attempt + 1}: Checking for start_param`, {
+          hasTelegram: !!this.tg,
+          initDataUnsafe: this.tg?.initDataUnsafe,
+          urlParams: window.location.search
+        });
+      }
+    }
+    
+    return null;
   }
 
   get colorScheme() {

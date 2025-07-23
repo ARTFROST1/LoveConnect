@@ -16,15 +16,27 @@ export function useInviteProcessing(): InviteProcessingResult {
   const { toast } = useToast();
 
   useEffect(() => {
-    processInviteIfPresent();
+    // Add longer delay to ensure Telegram WebApp is fully initialized
+    // Telegram WebApp might need more time to pass start_param properly
+    const timer = setTimeout(() => {
+      processInviteIfPresent();
+    }, 2000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const processInviteIfPresent = async () => {
     try {
-      // Check if we have invite parameters
-      const startParam = telegramService.startParam;
+      // Wait for Telegram WebApp to be fully initialized
+      await telegramService.waitForInitialization();
+      
+      // Check if we have invite parameters with retry logic
+      const startParam = await telegramService.getStartParamWithRetry();
+      
+      console.log('Processing invite with startParam:', startParam);
       
       if (!startParam || !startParam.startsWith('invite_')) {
+        console.log('No valid invite parameter found');
         return;
       }
 
@@ -34,11 +46,15 @@ export function useInviteProcessing(): InviteProcessingResult {
       // Extract inviter's user ID from start parameter
       const inviterUserId = startParam.replace('invite_', '');
       
+      console.log('Extracted inviter user ID:', inviterUserId);
+      
       // Get current user data
       const currentUser = telegramService.user;
       if (!currentUser) {
         throw new Error('No user data available for processing invite');
       }
+
+      console.log('Current user:', { id: currentUser.id, name: currentUser.first_name });
 
       // Initialize database if needed
       await database.initialize();
