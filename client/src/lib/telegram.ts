@@ -76,6 +76,11 @@ class TelegramService {
     if (typeof window !== 'undefined') {
       if (window.Telegram?.WebApp) {
         this.tg = window.Telegram.WebApp;
+        console.log('Telegram WebApp found:', {
+          version: this.tg.version,
+          initData: this.tg.initData,
+          initDataUnsafe: this.tg.initDataUnsafe
+        });
         this.initialize();
       } else {
         // Development mode - create mock user data
@@ -96,10 +101,12 @@ class TelegramService {
       document.documentElement.classList.add('dark');
     }
 
-    // Set up back button
-    this.tg.BackButton.onClick(() => {
-      window.history.back();
-    });
+    // Set up back button if supported
+    if (this.tg.BackButton) {
+      this.tg.BackButton.onClick(() => {
+        window.history.back();
+      });
+    }
   }
 
   get isAvailable(): boolean {
@@ -159,7 +166,7 @@ class TelegramService {
   }
 
   showBackButton(onClick?: () => void): void {
-    if (this.tg) {
+    if (this.tg && this.tg.BackButton) {
       if (onClick) {
         this.tg.BackButton.onClick(onClick);
       }
@@ -168,7 +175,7 @@ class TelegramService {
   }
 
   hideBackButton(): void {
-    if (this.tg) {
+    if (this.tg && this.tg.BackButton) {
       this.tg.BackButton.hide();
     }
   }

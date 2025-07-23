@@ -103,11 +103,22 @@ class SQLiteDatabase {
     if (!this.db) await this.initialize();
     
     console.log('Creating user:', { telegramId, name, avatar });
-    const avatarValue = avatar === undefined ? null : avatar;
+    
+    // Ensure all values are properly defined for SQLite
+    const cleanTelegramId = telegramId || '';
+    const cleanName = name || 'User';
+    const cleanAvatar = (avatar === undefined || avatar === '') ? null : avatar;
     
     const stmt = this.db!.prepare('INSERT INTO users (telegram_id, name, avatar) VALUES (?, ?, ?)');
-    stmt.run([telegramId, name, avatarValue]);
-    stmt.free();
+    try {
+      stmt.run([cleanTelegramId, cleanName, cleanAvatar]);
+    } catch (error) {
+      console.error('Database insert error:', error);
+      console.error('Values:', [cleanTelegramId, cleanName, cleanAvatar]);
+      throw error;
+    } finally {
+      stmt.free();
+    }
     
     this.saveDatabase();
     return this.getUser(telegramId);
