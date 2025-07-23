@@ -17,12 +17,7 @@ class DuoLoveTelegramBot {
     console.log('Environment:', this.isDevelopment ? 'development' : 'production');
     console.log('WebApp URL:', this.webAppUrl);
     
-    // In development, we can work without a real token for testing
-    if (this.isDevelopment) {
-      console.log('Telegram Bot: Running in development mode (no real bot required)');
-      return;
-    }
-
+    // Initialize bot if we have a token
     this.initializeBot();
   }
 
@@ -30,12 +25,19 @@ class DuoLoveTelegramBot {
     const token = process.env.TELEGRAM_BOT_TOKEN;
     
     if (!token) {
+      if (this.isDevelopment) {
+        console.log('Telegram Bot: Running in development mode (no real bot required)');
+        return;
+      }
       console.error('TELEGRAM_BOT_TOKEN is not set');
       return;
     }
 
     try {
-      this.bot = new TelegramBot(token, { polling: true });
+      this.bot = new TelegramBot(token, { 
+        polling: true,
+        baseApiUrl: 'https://api.telegram.org'
+      });
       this.setupCommands();
       console.log('Telegram Bot initialized successfully');
     } catch (error) {
@@ -202,16 +204,19 @@ class DuoLoveTelegramBot {
     }
   }
 
-  // Method to generate invite link for testing
-  generateInviteLink(userId: string): string {
-    if (this.isDevelopment) {
-      // In development, return a test link that works in the same app
-      return `${this.webAppUrl}?start=invite_${userId}&testUserId=${parseInt(userId) + 1}`;
+  // Method to generate invite link
+  async generateInviteLink(userId: string): Promise<string> {
+    try {
+      // Get bot info to get the actual username
+      const botInfo = await this.getBotInfo();
+      const botUsername = botInfo?.username || 'duolove_bot';
+      
+      return `https://t.me/${botUsername}?start=invite_${userId}`;
+    } catch (error) {
+      console.error('Error generating invite link:', error);
+      // Fallback - the user provided bot token suggests the username
+      return `https://t.me/duolove_bot?start=invite_${userId}`;
     }
-    
-    // In production, use actual bot username
-    const botUsername = process.env.BOT_USERNAME || 'duolove_bot';
-    return `https://t.me/${botUsername}?start=invite_${userId}`;
   }
 }
 

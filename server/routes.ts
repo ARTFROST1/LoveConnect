@@ -18,7 +18,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "User ID is required" });
       }
 
-      const inviteLink = telegramBot.generateInviteLink(userId);
+      const inviteLink = await telegramBot.generateInviteLink(userId);
       
       res.json({ 
         inviteLink,

@@ -17,6 +17,7 @@ import NotFound from "@/pages/not-found";
 // Import services
 import { telegramService } from "@/lib/telegram";
 import { database } from "@/lib/database";
+import { useInviteProcessing } from "@/hooks/use-invite-processing";
 
 function Router() {
   return (
@@ -36,6 +37,9 @@ function Router() {
 }
 
 function App() {
+  // Process invite links automatically when app starts
+  const { isProcessing: isProcessingInvite } = useInviteProcessing();
+
   useEffect(() => {
     // Initialize Telegram WebApp
     if (telegramService.isAvailable) {
@@ -56,7 +60,16 @@ function App() {
       <TooltipProvider>
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
           <Toaster />
-          <Router />
+          {isProcessingInvite ? (
+            <div className="min-h-screen flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-gray-600 dark:text-gray-400">Обрабатываем приглашение...</p>
+              </div>
+            </div>
+          ) : (
+            <Router />
+          )}
         </div>
       </TooltipProvider>
     </QueryClientProvider>
