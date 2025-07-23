@@ -12,6 +12,7 @@ import GameList from "@/pages/GameList";
 import GameRoom from "@/pages/GameRoom";
 import History from "@/pages/History";
 import Navigation from "@/components/Navigation";
+import TestPage from "@/pages/TestPage";
 import NotFound from "@/pages/not-found";
 
 // Import services
@@ -29,6 +30,7 @@ function Router() {
         <Route path="/game/:gameId" component={GameRoom} />
         <Route path="/history" component={History} />
         <Route path="/profile" component={Home} /> {/* Profile redirects to home for now */}
+        <Route path="/test" component={TestPage} />
         <Route component={NotFound} />
       </Switch>
       <Navigation />
