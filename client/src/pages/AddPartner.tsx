@@ -14,8 +14,12 @@ export default function AddPartner() {
   const { toast } = useToast();
 
   useEffect(() => {
-    checkStartParam();
-    generateInviteLink();
+    const initializeInviteSystem = async () => {
+      await checkStartParam();
+      await generateInviteLink();
+    };
+    
+    initializeInviteSystem();
   }, []);
 
   const checkStartParam = async () => {
@@ -39,6 +43,16 @@ export default function AddPartner() {
         return;
       }
 
+      // Avoid self-invitation
+      if (tgUser.id.toString() === inviterTelegramId) {
+        toast({
+          title: "Ошибка", 
+          description: "Вы не можете пригласить сами себя",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // Get or create current user
       let dbUser = await database.getUser(tgUser.id.toString());
       if (!dbUser) {
@@ -49,18 +63,31 @@ export default function AddPartner() {
         );
       }
 
-      // Get inviter user data (in real app, this would come from bot API)
-      const inviterUser = await database.getUser(inviterTelegramId);
-      if (!inviterUser) {
+      // Check if partner connection already exists
+      const existingPartner = await database.getPartner(dbUser.id);
+      if (existingPartner) {
         toast({
-          title: "Ошибка",
-          description: "Пользователь, который вас пригласил, не найден",
-          variant: "destructive"
+          title: "Уведомление",
+          description: "У вас уже есть партнёр",
+          variant: "default"
         });
+        setLocation('/');
         return;
       }
 
-      // Add partner connection
+      // Get or create inviter user data
+      let inviterUser = await database.getUser(inviterTelegramId);
+      if (!inviterUser) {
+        // In a real Telegram bot, we would fetch user data from Telegram API
+        // For now, create a basic user entry
+        inviterUser = await database.createUser(
+          inviterTelegramId,
+          `Пользователь ${inviterTelegramId}`,
+          null
+        );
+      }
+
+      // Add partner connection (bidirectional)
       await database.addPartner(
         dbUser.id,
         inviterTelegramId,
@@ -93,12 +120,30 @@ export default function AddPartner() {
     }
   };
 
-  const generateInviteLink = () => {
+  const generateInviteLink = async () => {
     const tgUser = telegramService.user;
-    if (!tgUser) return;
+    if (!tgUser) {
+      console.log("No user data available for generating invite link");
+      return;
+    }
 
-    const link = telegramService.generateInviteLink(tgUser.id.toString());
-    setInviteLink(link);
+    // Ensure user exists in database before generating invite link
+    try {
+      let dbUser = await database.getUser(tgUser.id.toString());
+      if (!dbUser) {
+        dbUser = await database.createUser(
+          tgUser.id.toString(),
+          `${tgUser.first_name} ${tgUser.last_name || ''}`.trim(),
+          tgUser.photo_url || null
+        );
+        console.log("Created user for invite link generation:", dbUser);
+      }
+      
+      const link = telegramService.generateInviteLink(tgUser.id.toString());
+      setInviteLink(link);
+    } catch (error) {
+      console.error("Failed to ensure user exists for invite link:", error);
+    }
   };
 
   const copyInviteLink = async () => {
@@ -193,6 +238,17 @@ export default function AddPartner() {
                 <Share className="w-4 h-4 mr-2" />
                 Отправить в Telegram
               </Button>
+              
+              {/* Development mode test button */}
+              {telegramService.isDevelopment && inviteLink && (
+                <Button 
+                  onClick={() => window.open(inviteLink, '_blank')}
+                  variant="outline"
+                  className="w-full border-dashed"
+                >
+                  🧪 Тестировать ссылку (режим разработки)
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -105,9 +105,16 @@ class SQLiteDatabase {
     console.log('Creating user:', { telegramId, name, avatar });
     
     // Ensure all values are properly defined for SQLite
-    const cleanTelegramId = telegramId || '';
-    const cleanName = name || 'User';
-    const cleanAvatar = (avatar === undefined || avatar === '') ? null : avatar;
+    const cleanTelegramId = String(telegramId || '');
+    const cleanName = String(name || 'User');
+    const cleanAvatar = (avatar === undefined || avatar === '' || avatar === null) ? null : String(avatar);
+    
+    // Check if user already exists
+    const existingUser = await this.getUser(cleanTelegramId);
+    if (existingUser) {
+      console.log('User already exists, returning existing user');
+      return existingUser;
+    }
     
     const stmt = this.db!.prepare('INSERT INTO users (telegram_id, name, avatar) VALUES (?, ?, ?)');
     try {
@@ -121,7 +128,7 @@ class SQLiteDatabase {
     }
     
     this.saveDatabase();
-    return this.getUser(telegramId);
+    return this.getUser(cleanTelegramId);
   }
 
   async getPartner(userId: number): Promise<any> {

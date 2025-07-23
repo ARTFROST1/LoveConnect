@@ -70,7 +70,7 @@ declare global {
 
 class TelegramService {
   private tg: TelegramWebApp | null = null;
-  private isDevelopment: boolean = false;
+  public isDevelopment: boolean = false;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -114,12 +114,28 @@ class TelegramService {
   }
 
   get user() {
+    // Try to get user from Telegram WebApp
     if (this.tg?.initDataUnsafe?.user) {
       return this.tg.initDataUnsafe.user;
     }
     
-    // Development fallback
+    // Development fallback with more realistic data
     if (this.isDevelopment) {
+      // Check if we have a different user in URL params for testing invite links
+      const urlParams = new URLSearchParams(window.location.search);
+      const testUserId = urlParams.get('testUserId');
+      
+      if (testUserId) {
+        return {
+          id: parseInt(testUserId),
+          first_name: "Пользователь",
+          last_name: testUserId,
+          username: `user_${testUserId}`,
+          language_code: "ru",
+          photo_url: null
+        };
+      }
+      
       return {
         id: 123456789,
         first_name: "Тестовый",
@@ -130,6 +146,7 @@ class TelegramService {
       };
     }
     
+    console.log("No Telegram user data available");
     return null;
   }
 
@@ -140,7 +157,7 @@ class TelegramService {
     
     // Check URL params for development
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('tgWebAppStartParam') || null;
+    return urlParams.get('tgWebAppStartParam') || urlParams.get('start') || null;
   }
 
   get colorScheme() {
@@ -213,6 +230,13 @@ class TelegramService {
   generateInviteLink(userId: string): string {
     // This would use the actual bot username from environment
     const botUsername = import.meta.env.VITE_BOT_USERNAME || 'duolove_bot';
+    
+    if (this.isDevelopment) {
+      // In development, generate a link that can be tested in the same app
+      const currentUrl = window.location.origin;
+      return `${currentUrl}?start=invite_${userId}&testUserId=${parseInt(userId) + 1}`;
+    }
+    
     return `https://t.me/${botUsername}?start=invite_${userId}`;
   }
 
