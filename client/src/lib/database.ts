@@ -1,0 +1,216 @@
+// @ts-ignore - sql.js types may not be fully available
+import initSqlJs from 'sql.js';
+
+class SQLiteDatabase {
+  private db: any = null;
+  private initialized = false;
+
+  async initialize(): Promise<void> {
+    if (this.initialized) return;
+
+    try {
+      const SQL = await initSqlJs({
+        locateFile: (file: string) => `https://sql.js.org/dist/${file}`
+      });
+
+      // Try to load existing database from localStorage
+      const savedData = localStorage.getItem('duolove_db');
+      if (savedData) {
+        const binaryArray = new Uint8Array(JSON.parse(savedData));
+        this.db = new SQL.Database(binaryArray);
+      } else {
+        this.db = new SQL.Database();
+        await this.createTables();
+      }
+
+      this.initialized = true;
+    } catch (error) {
+      console.error('Failed to initialize SQLite database:', error);
+      throw error;
+    }
+  }
+
+  private async createTables(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    const createTablesSQL = `
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        telegram_id TEXT UNIQUE NOT NULL,
+        name TEXT NOT NULL,
+        avatar TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS partners (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        partner_telegram_id TEXT NOT NULL,
+        partner_name TEXT NOT NULL,
+        partner_avatar TEXT,
+        connected_at TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS game_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        game_type TEXT NOT NULL,
+        user_score INTEGER DEFAULT 0,
+        partner_score INTEGER DEFAULT 0,
+        started_at TEXT NOT NULL,
+        finished_at TEXT,
+        status TEXT DEFAULT 'active'
+      );
+
+      CREATE TABLE IF NOT EXISTS game_actions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id INTEGER NOT NULL,
+        player TEXT NOT NULL,
+        action TEXT NOT NULL,
+        data TEXT,
+        timestamp TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS achievements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        unlocked_at TEXT NOT NULL
+      );
+    `;
+
+    this.db.exec(createTablesSQL);
+    this.saveDatabase();
+  }
+
+  private saveDatabase(): void {
+    if (!this.db) return;
+    
+    const data = this.db.export();
+    const dataArray = Array.from(data);
+    localStorage.setItem('duolove_db', JSON.stringify(dataArray));
+  }
+
+  async getUser(telegramId: string): Promise<any> {
+    if (!this.db) await this.initialize();
+    
+    const stmt = this.db!.prepare('SELECT * FROM users WHERE telegram_id = ?');
+    const result = stmt.getAsObject([telegramId]);
+    stmt.free();
+    
+    return Object.keys(result).length > 0 ? result : null;
+  }
+
+  async createUser(telegramId: string, name: string, avatar?: string): Promise<any> {
+    if (!this.db) await this.initialize();
+    
+    const stmt = this.db!.prepare('INSERT INTO users (telegram_id, name, avatar) VALUES (?, ?, ?)');
+    stmt.run([telegramId, name, avatar || null]);
+    stmt.free();
+    
+    this.saveDatabase();
+    return this.getUser(telegramId);
+  }
+
+  async getPartner(userId: number): Promise<any> {
+    if (!this.db) await this.initialize();
+    
+    const stmt = this.db!.prepare('SELECT * FROM partners WHERE user_id = ?');
+    const result = stmt.getAsObject([userId]);
+    stmt.free();
+    
+    return Object.keys(result).length > 0 ? result : null;
+  }
+
+  async addPartner(userId: number, partnerTelegramId: string, partnerName: string, partnerAvatar?: string): Promise<any> {
+    if (!this.db) await this.initialize();
+    
+    const connectedAt = new Date().toISOString();
+    const stmt = this.db!.prepare('INSERT INTO partners (user_id, partner_telegram_id, partner_name, partner_avatar, connected_at) VALUES (?, ?, ?, ?, ?)');
+    stmt.run([userId, partnerTelegramId, partnerName, partnerAvatar || null, connectedAt]);
+    stmt.free();
+    
+    this.saveDatabase();
+    return this.getPartner(userId);
+  }
+
+  async createGameSession(gameType: string): Promise<any> {
+    if (!this.db) await this.initialize();
+    
+    const startedAt = new Date().toISOString();
+    const stmt = this.db!.prepare('INSERT INTO game_sessions (game_type, started_at) VALUES (?, ?)');
+    stmt.run([gameType, startedAt]);
+    const sessionId = this.db!.exec('SELECT last_insert_rowid()')[0].values[0][0];
+    stmt.free();
+    
+    this.saveDatabase();
+    return { id: sessionId, gameType, startedAt, status: 'active' };
+  }
+
+  async updateGameSession(sessionId: number, userScore: number, partnerScore: number): Promise<void> {
+    if (!this.db) await this.initialize();
+    
+    const finishedAt = new Date().toISOString();
+    const stmt = this.db!.prepare('UPDATE game_sessions SET user_score = ?, partner_score = ?, finished_at = ?, status = "completed" WHERE id = ?');
+    stmt.run([userScore, partnerScore, finishedAt, sessionId]);
+    stmt.free();
+    
+    this.saveDatabase();
+  }
+
+  async addGameAction(sessionId: number, player: string, action: string, data?: any): Promise<void> {
+    if (!this.db) await this.initialize();
+    
+    const timestamp = new Date().toISOString();
+    const stmt = this.db!.prepare('INSERT INTO game_actions (session_id, player, action, data, timestamp) VALUES (?, ?, ?, ?, ?)');
+    stmt.run([sessionId, player, action, data ? JSON.stringify(data) : null, timestamp]);
+    stmt.free();
+    
+    this.saveDatabase();
+  }
+
+  async getGameHistory(limit: number = 10): Promise<any[]> {
+    if (!this.db) await this.initialize();
+    
+    const stmt = this.db!.prepare('SELECT * FROM game_sessions WHERE status = "completed" ORDER BY finished_at DESC LIMIT ?');
+    const results = [];
+    
+    while (stmt.step()) {
+      results.push(stmt.getAsObject());
+    }
+    
+    stmt.free();
+    return results;
+  }
+
+  async getGameStats(): Promise<any> {
+    if (!this.db) await this.initialize();
+    
+    const totalGamesStmt = this.db!.prepare('SELECT COUNT(*) as total FROM game_sessions WHERE status = "completed"');
+    const totalGames = totalGamesStmt.getAsObject()['total'] as number;
+    totalGamesStmt.free();
+    
+    const achievementsStmt = this.db!.prepare('SELECT COUNT(*) as total FROM achievements');
+    const achievements = achievementsStmt.getAsObject()['total'] as number;
+    achievementsStmt.free();
+    
+    return {
+      gamesPlayed: totalGames,
+      achievements,
+      hearts: totalGames * 10, // Simple calculation
+      winRate: 65, // Would calculate based on actual wins
+      currentStreak: 7 // Would calculate based on consecutive days
+    };
+  }
+
+  async addAchievement(userId: number, type: string): Promise<void> {
+    if (!this.db) await this.initialize();
+    
+    const unlockedAt = new Date().toISOString();
+    const stmt = this.db!.prepare('INSERT INTO achievements (user_id, type, unlocked_at) VALUES (?, ?, ?)');
+    stmt.run([userId, type, unlockedAt]);
+    stmt.free();
+    
+    this.saveDatabase();
+  }
+}
+
+export const database = new SQLiteDatabase();
