@@ -47,7 +47,9 @@ class SQLiteDatabase {
         partner_telegram_id TEXT NOT NULL,
         partner_name TEXT NOT NULL,
         partner_avatar TEXT,
-        connected_at TEXT NOT NULL
+        connected_at TEXT NOT NULL,
+        status TEXT DEFAULT 'pending',
+        inviter_user_id TEXT
       );
 
       CREATE TABLE IF NOT EXISTS game_sessions (
@@ -141,12 +143,12 @@ class SQLiteDatabase {
     return Object.keys(result).length > 0 ? result : null;
   }
 
-  async addPartner(userId: number, partnerTelegramId: string, partnerName: string, partnerAvatar?: string | null): Promise<any> {
+  async addPartner(userId: number, partnerTelegramId: string, partnerName: string, partnerAvatar?: string | null, status: string = 'pending', inviterUserId?: string): Promise<any> {
     if (!this.db) await this.initialize();
     
     const connectedAt = new Date().toISOString();
-    const stmt = this.db!.prepare('INSERT INTO partners (user_id, partner_telegram_id, partner_name, partner_avatar, connected_at) VALUES (?, ?, ?, ?, ?)');
-    stmt.run([userId, partnerTelegramId, partnerName, partnerAvatar || null, connectedAt]);
+    const stmt = this.db!.prepare('INSERT INTO partners (user_id, partner_telegram_id, partner_name, partner_avatar, connected_at, status, inviter_user_id) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    stmt.run([userId, partnerTelegramId, partnerName, partnerAvatar || null, connectedAt, status, inviterUserId || null]);
     stmt.free();
     
     this.saveDatabase();
@@ -220,6 +222,36 @@ class SQLiteDatabase {
       winRate: 65, // Would calculate based on actual wins
       currentStreak: 7 // Would calculate based on consecutive days
     };
+  }
+
+  async updatePartnerStatus(userId: number, status: string): Promise<void> {
+    if (!this.db) await this.initialize();
+    
+    const stmt = this.db!.prepare('UPDATE partners SET status = ? WHERE user_id = ?');
+    stmt.run([status, userId]);
+    stmt.free();
+    
+    this.saveDatabase();
+  }
+
+  async getPartnerByTelegramId(telegramId: string): Promise<any> {
+    if (!this.db) await this.initialize();
+    
+    const stmt = this.db!.prepare('SELECT * FROM partners WHERE partner_telegram_id = ?');
+    const result = stmt.getAsObject([telegramId]);
+    stmt.free();
+    
+    return Object.keys(result).length > 0 ? result : null;
+  }
+
+  async updatePartnerInfo(userId: number, partnerName: string, partnerAvatar?: string | null): Promise<void> {
+    if (!this.db) await this.initialize();
+    
+    const stmt = this.db!.prepare('UPDATE partners SET partner_name = ?, partner_avatar = ? WHERE user_id = ?');
+    stmt.run([partnerName, partnerAvatar || null, userId]);
+    stmt.free();
+    
+    this.saveDatabase();
   }
 
   async addAchievement(userId: number, type: string): Promise<void> {

@@ -103,7 +103,8 @@ class DuoLoveTelegramBot {
 
       await this.bot.sendMessage(chatId, 
         `🎉 Вас пригласили играть в DuoLove!\n\n` +
-        `Откройте приложение, чтобы подключиться к партнёру и начать играть в мини-игры вместе.`,
+        `Откройте приложение, чтобы подключиться к партнёру и начать играть в мини-игры вместе.\n\n` +
+        `После подключения ваш партнёр получит уведомление о том, что вы приняли приглашение.`,
         {
           reply_markup: keyboard,
           parse_mode: 'HTML'
@@ -214,6 +215,43 @@ class DuoLoveTelegramBot {
       console.error('Error generating invite link:', error);
       // Fallback - the user provided bot token suggests the username
       return `https://t.me/duolove_bot?start=invite_${userId}`;
+    }
+  }
+
+  // Method to notify partner connection
+  async notifyPartnerConnection(inviterUserId: string, inviteeUserId: string, inviteeName: string): Promise<void> {
+    if (!this.bot) {
+      if (this.isDevelopment) {
+        console.log(`[DEV] Would notify user ${inviterUserId} that ${inviteeName} (${inviteeUserId}) connected`);
+        return;
+      }
+      console.error('Bot is not initialized');
+      return;
+    }
+
+    try {
+      const keyboard = {
+        inline_keyboard: [[
+          {
+            text: '🎮 Открыть DuoLove',
+            web_app: { url: this.webAppUrl }
+          }
+        ]]
+      };
+
+      await this.bot.sendMessage(parseInt(inviterUserId), 
+        `🎉 Партнёрство установлено!\n\n` +
+        `${inviteeName} принял ваше приглашение и готов играть!\n\n` +
+        `Откройте DuoLove, чтобы начать игру вместе.`,
+        {
+          reply_markup: keyboard,
+          parse_mode: 'HTML'
+        }
+      );
+
+      console.log(`Partner connection notification sent to user ${inviterUserId}`);
+    } catch (error) {
+      console.error('Error sending partner connection notification:', error);
     }
   }
 }

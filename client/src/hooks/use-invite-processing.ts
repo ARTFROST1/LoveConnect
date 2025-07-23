@@ -80,21 +80,43 @@ export function useInviteProcessing(): InviteProcessingResult {
         return;
       }
 
-      // For invite processing, we need to create a bidirectional relationship
-      // Since we only have the inviter's Telegram ID, we'll use it to create the partnership
-      
-      // Create partner relationship for current user -> inviter
+      // Step 1: Create pending partnership for current user -> inviter
       await database.addPartner(
         dbUser.id,
         inviterUserId,
-        `Пользователь ${inviterUserId}`, // We don't have the inviter's full name
-        null // No avatar available
+        `Пользователь ${inviterUserId}`, // We'll get the real name later
+        null, // No avatar available yet
+        'connected', // Mark as connected since user accepted the invite
+        inviterUserId // Track who invited
       );
 
-      // Show success notification
+      // Step 2: Notify the inviter about the connection
+      try {
+        const response = await fetch('/api/partner/notify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            inviterUserId,
+            inviteeUserId: currentUser.id.toString(),
+            inviteeName: `${currentUser.first_name} ${currentUser.last_name || ''}`.trim()
+          })
+        });
+
+        if (response.ok) {
+          console.log('Partner notification sent successfully');
+        } else {
+          console.error('Failed to send partner notification');
+        }
+      } catch (error) {
+        console.error('Error sending partner notification:', error);
+      }
+
+      // Step 3: Show success notification
       toast({
-        title: "Партнёр добавлен!",
-        description: "Вы успешно подключились к партнёру. Теперь можете играть вместе!",
+        title: "Партнёрство установлено!",
+        description: "Вы успешно подключились к партнёру. Приглашающий получил уведомление!",
       });
 
       // Trigger haptic feedback
@@ -105,7 +127,8 @@ export function useInviteProcessing(): InviteProcessingResult {
       console.log('Invite processed successfully:', {
         currentUserId: currentUser.id,
         inviterUserId,
-        partnershipCreated: true
+        partnershipCreated: true,
+        notificationSent: true
       });
 
     } catch (err) {

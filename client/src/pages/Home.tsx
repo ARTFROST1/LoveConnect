@@ -2,17 +2,29 @@ import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, Trophy, Flame, Play } from "lucide-react";
+import { Heart, Trophy, Flame, Play, RefreshCw } from "lucide-react";
 import { database } from "@/lib/database";
 import { telegramService } from "@/lib/telegram";
 import { GameStats, UserProfile, PartnerProfile } from "@/types/models";
+import { usePartnerSync } from "@/hooks/use-partner-sync";
 
 export default function Home() {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [partner, setPartner] = useState<PartnerProfile | null>(null);
   const [stats, setStats] = useState<GameStats | null>(null);
   const [gameHistory, setGameHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Use the partner sync hook for real-time updates
+  const { partner: syncedPartner, isLoading: partnerLoading, refreshPartner } = usePartnerSync(user?.id || 0);
+
+  // Convert synced partner to PartnerProfile format
+  const partner: PartnerProfile | null = syncedPartner ? {
+    id: syncedPartner.id,
+    name: syncedPartner.partner_name,
+    avatar: syncedPartner.partner_avatar,
+    telegramId: syncedPartner.partner_telegram_id,
+    connectedAt: syncedPartner.connected_at
+  } : null;
 
   useEffect(() => {
     initializeUser();
@@ -55,17 +67,9 @@ export default function Home() {
         telegramId: dbUser.telegram_id
       });
 
-      // Get partner
-      const dbPartner = await database.getPartner(dbUser.id);
-      if (dbPartner) {
-        setPartner({
-          id: dbPartner.id,
-          name: dbPartner.partner_name,
-          avatar: dbPartner.partner_avatar,
-          telegramId: dbPartner.partner_telegram_id,
-          connectedAt: dbPartner.connected_at
-        });
-      }
+      // Partner will be handled by usePartnerSync hook
+      // Trigger a refresh to get the latest partner data
+      setTimeout(() => refreshPartner(), 100);
 
       // Get stats and history
       const gameStats = await database.getGameStats();
@@ -158,10 +162,10 @@ export default function Home() {
               {/* Partner Avatar */}
               <div className="relative">
                 <div className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center border-2 border-secondary">
-                  {partner.avatar ? (
+                  {partner?.avatar ? (
                     <img src={partner.avatar} alt="Partner" className="w-full h-full rounded-full object-cover" />
                   ) : (
-                    <span className="text-white font-semibold">{partner.name.charAt(0)}</span>
+                    <span className="text-white font-semibold">{partner?.name?.charAt(0) || 'P'}</span>
                   )}
                 </div>
                 <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>
@@ -170,7 +174,7 @@ export default function Home() {
             
             <div className="text-center">
               <h3 className="font-semibold text-lg text-gray-800 dark:text-gray-100">
-                {user?.name} & {partner.name}
+                {user?.name} & {partner?.name || 'Партнёр'}
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Играете вместе {getDaysPlaying()} дней
@@ -180,6 +184,24 @@ export default function Home() {
                 <span className="text-sm font-medium text-accent">
                   {stats?.currentStreak || 0} дней подряд
                 </span>
+              </div>
+              
+              {/* Partner Status Indicator */}
+              <div className="flex items-center justify-center mt-3 space-x-2">
+                <div className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>Партнёр подключён</span>
+                </div>
+                {partnerLoading && (
+                  <RefreshCw className="w-3 h-3 text-gray-400 animate-spin" />
+                )}
+                <button 
+                  onClick={refreshPartner}
+                  className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 ml-2"
+                  disabled={partnerLoading}
+                >
+                  <RefreshCw className={`w-3 h-3 ${partnerLoading ? 'animate-spin' : ''}`} />
+                </button>
               </div>
             </div>
           </CardContent>

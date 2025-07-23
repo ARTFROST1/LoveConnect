@@ -44,6 +44,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Notify partner connection
+  app.post("/api/partner/notify", async (req, res) => {
+    try {
+      const { inviterUserId, inviteeUserId, inviteeName } = req.body;
+      
+      if (!inviterUserId || !inviteeUserId || !inviteeName) {
+        return res.status(400).json({ error: "Missing required parameters" });
+      }
+
+      await telegramBot.notifyPartnerConnection(inviterUserId, inviteeUserId, inviteeName);
+      
+      res.json({ 
+        success: true,
+        message: "Partner notification sent" 
+      });
+    } catch (error) {
+      console.error("Error notifying partner:", error);
+      res.status(500).json({ error: "Failed to notify partner" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

@@ -14,6 +14,7 @@ import History from "@/pages/History";
 import Navigation from "@/components/Navigation";
 import TestPage from "@/pages/TestPage";
 import TestInvite from "@/pages/TestInvite";
+import PartnerTest from "@/pages/PartnerTest";
 import NotFound from "@/pages/not-found";
 
 // Import services
@@ -33,6 +34,7 @@ function Router() {
         <Route path="/profile" component={Home} /> {/* Profile redirects to home for now */}
         <Route path="/test" component={TestPage} />
         <Route path="/test-invite" component={TestInvite} />
+        <Route path="/partner-test" component={PartnerTest} />
         <Route component={NotFound} />
       </Switch>
       <Navigation />

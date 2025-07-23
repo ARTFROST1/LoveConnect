@@ -18,6 +18,8 @@ export const partners = pgTable("partners", {
   partnerName: text("partner_name").notNull(),
   partnerAvatar: text("partner_avatar"),
   connectedAt: text("connected_at").notNull(),
+  status: text("status").notNull().default("pending"), // pending, connected, confirmed
+  inviterUserId: text("inviter_user_id"), // Who initiated the connection
 });
 
 // Game sessions table
@@ -61,6 +63,8 @@ export const insertPartnerSchema = createInsertSchema(partners).pick({
   partnerName: true,
   partnerAvatar: true,
   connectedAt: true,
+  status: true,
+  inviterUserId: true,
 });
 
 export const insertGameSessionSchema = createInsertSchema(gameSessions).pick({
