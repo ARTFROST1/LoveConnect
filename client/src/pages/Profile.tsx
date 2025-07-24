@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useParams } from "wouter";
+import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -41,7 +41,6 @@ import { telegramService } from "@/lib/telegram";
 import { UserProfile, PartnerProfile } from "@/types/models";
 import { usePartnerSync } from "@/hooks/use-partner-sync";
 import { cn } from "@/lib/utils";
-import UserCard from "@/components/UserCard";
 
 interface GameHistoryItem {
   id: number;
@@ -76,7 +75,6 @@ interface UserStats {
 
 export default function Profile() {
   const [location, navigate] = useLocation();
-  const { partnerId } = useParams<{ partnerId?: string }>();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [partnerData, setPartnerData] = useState<PartnerProfile | null>(null);
   const [gameHistory, setGameHistory] = useState<GameHistoryItem[]>([]);
@@ -96,6 +94,8 @@ export default function Profile() {
   const { toast } = useToast();
 
   // Check if we're viewing a partner's profile
+  const urlParams = new URLSearchParams(location.split('?')[1] || '');
+  const partnerId = urlParams.get('partnerId');
   const isViewingPartner = Boolean(partnerId);
 
   // Use the partner sync hook for real-time updates
@@ -345,7 +345,7 @@ export default function Profile() {
     } else if (partner) {
       // Go to partner profile
       telegramService.hapticFeedback('selection');
-      navigate(`/profile/${partner.telegramId}`);
+      navigate(`/profile?partnerId=${partner.telegramId}`);
     }
   };
 
@@ -481,22 +481,28 @@ export default function Profile() {
             
             {/* Relationship Info */}
             {relationshipPartner ? (
-              <div className="mx-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 text-center">
-                  В отношениях с
-                </p>
-                <UserCard
-                  user={relationshipPartner}
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mx-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">В отношениях с</p>
+                <div 
+                  className="flex items-center justify-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={handlePartnerClick}
-                  showOnlineStatus={true}
-                  isOnline={!isViewingPartner} // Show current user as online when viewing partner profile
-                  daysText={`${getDaysWithPartner()} дней вместе`}
-                  variant="compact"
-                  className="mx-auto max-w-sm"
-                />
+                >
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src={relationshipPartner.avatar || ""} alt={relationshipPartner.name} />
+                    <AvatarFallback className="text-xs">
+                      {relationshipPartner.name?.[0]?.toUpperCase() || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="text-center">
+                    <p className="font-semibold text-gray-900 dark:text-white">{relationshipPartner.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {getDaysWithPartner()} дней вместе
+                    </p>
+                  </div>
+                </div>
               </div>
             ) : (
-              <p className="text-gray-500 dark:text-gray-400 text-sm text-center">
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 {isViewingPartner ? "Данные недоступны" : "Партнёр не добавлен"}
               </p>
             )}
