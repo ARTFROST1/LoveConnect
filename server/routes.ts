@@ -65,6 +65,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Unlink partner (bilateral disconnection)
+  app.post("/api/unlink-partner", async (req, res) => {
+    try {
+      const { user_id, partner_id } = req.body;
+      
+      if (!user_id || !partner_id) {
+        return res.status(400).json({ error: "Both user_id and partner_id are required" });
+      }
+
+      // Notify both users about the disconnection via Telegram bot
+      try {
+        await telegramBot.notifyPartnerDisconnection(user_id, partner_id);
+      } catch (notifyError) {
+        console.warn("Failed to notify users via Telegram bot:", notifyError);
+      }
+      
+      res.json({ 
+        success: true,
+        message: "Partner disconnection processed" 
+      });
+    } catch (error) {
+      console.error("Error unlinking partner:", error);
+      res.status(500).json({ error: "Failed to unlink partner" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

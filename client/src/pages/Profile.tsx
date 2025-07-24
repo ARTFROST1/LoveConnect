@@ -97,7 +97,7 @@ export default function Profile() {
   const urlParams = new URLSearchParams(location.split('?')[1] || '');
   const partnerId = urlParams.get('partnerId');
   const isViewingPartner = Boolean(partnerId);
-
+  
   // Use the partner sync hook for real-time updates
   const { partner: syncedPartner, isLoading: partnerLoading } = usePartnerSync(user?.id ? parseInt(user.id) : 0);
 
@@ -109,6 +109,9 @@ export default function Profile() {
     telegramId: syncedPartner.partner_telegram_id,
     connectedAt: syncedPartner.connected_at
   } : null;
+  
+  // Check if partner relationship still exists when viewing partner profile
+  const hasValidPartnerAccess = isViewingPartner ? (partner && partner.telegramId === partnerId) : true;
 
   useEffect(() => {
     initializeProfile();
@@ -363,9 +366,29 @@ export default function Profile() {
     
     try {
       setIsRemovingPartner(true);
-      telegramService.hapticFeedback('impact_heavy');
+      telegramService.hapticFeedback('impact');
       
-      // Remove partner from database
+      // Send unlink request to server for bilateral disconnection
+      try {
+        const response = await fetch('/api/unlink-partner', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_id: user.telegramId,
+            partner_id: partner.telegramId
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Server unlink failed');
+        }
+      } catch (serverError) {
+        console.warn('Server unlink failed, proceeding with local unlink:', serverError);
+      }
+      
+      // Remove partner from local database
       await database.removePartner(parseInt(user.id));
       
       // Show success toast
@@ -375,9 +398,9 @@ export default function Profile() {
         duration: 5000
       });
       
-      // Trigger partner sync refresh and navigate to home
+      // Force page reload to ensure clean state
       setTimeout(() => {
-        navigate('/');
+        window.location.href = '/';
       }, 1000);
       
     } catch (error) {
@@ -418,6 +441,28 @@ export default function Profile() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">Загружаем профиль...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Block access to partner profile if relationship no longer exists
+  if (isViewingPartner && !hasValidPartnerAccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6 text-center">
+            <UserX className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+              Профиль недоступен
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Этот пользователь больше не состоит в паре с вами
+            </p>
+            <Button onClick={() => navigate('/profile')} className="w-full">
+              Вернуться к профилю
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

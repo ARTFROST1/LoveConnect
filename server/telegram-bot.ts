@@ -254,6 +254,43 @@ class DuoLoveTelegramBot {
       console.error('Error sending partner connection notification:', error);
     }
   }
+
+  // Method to notify partner disconnection
+  async notifyPartnerDisconnection(userId: string, partnerId: string): Promise<void> {
+    if (!this.bot) {
+      if (this.isDevelopment) {
+        console.log(`[DEV] Would notify user ${partnerId} that ${userId} disconnected`);
+        return;
+      }
+      console.error('Bot is not initialized');
+      return;
+    }
+
+    try {
+      const keyboard = {
+        inline_keyboard: [[
+          {
+            text: '🎮 Открыть DuoLove',
+            web_app: { url: this.webAppUrl }
+          }
+        ]]
+      };
+
+      await this.bot.sendMessage(parseInt(partnerId), 
+        `💔 Партнёрство завершено\n\n` +
+        `Ваш партнёр разорвал связь в DuoLove.\n\n` +
+        `Вы можете добавить нового партнёра и продолжить играть.`,
+        {
+          reply_markup: keyboard,
+          parse_mode: 'HTML'
+        }
+      );
+
+      console.log(`Partner disconnection notification sent to user ${partnerId}`);
+    } catch (error) {
+      console.error('Error sending partner disconnection notification:', error);
+    }
+  }
 }
 
 export const telegramBot = new DuoLoveTelegramBot();
