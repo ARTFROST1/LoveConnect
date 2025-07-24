@@ -24,20 +24,25 @@ export function usePartnerSync(userId: number): PartnerSyncResult {
     try {
       setIsLoading(true);
       
-      // Сначала проверяем локальную базу данных
-      const dbPartner = await database.getPartner(userId);
-      console.log('Partner data from local DB:', dbPartner);
-      
-      // Если в локальной базе есть партнер, используем его и не делаем лишних запросов
-      if (dbPartner && dbPartner.id && dbPartner.partner_name && dbPartner.partner_telegram_id) {
-        setPartner(dbPartner);
+      // Получаем Telegram ID пользователя для API запроса
+      const tgUser = telegramService.user;
+      if (!tgUser) {
+        console.log('No Telegram user data available for partner sync');
+        setPartner(null);
         setIsLoading(false);
         return;
       }
       
-      // Только если в локальной базе нет данных, проверяем сервер
+      const telegramUserId = tgUser.id.toString();
+      console.log('Checking partnership for Telegram user ID:', telegramUserId);
+      
+      // Сначала проверяем локальную базу данных
+      const dbPartner = await database.getPartner(userId);
+      console.log('Partner data from local DB:', dbPartner);
+      
+      // Проверяем сервер для получения актуальных данных
       try {
-        const response = await fetch(`/api/partner/status/${userId}`);
+        const response = await fetch(`/api/partner/status/${telegramUserId}`);
         if (response.ok) {
           const serverData = await response.json();
           console.log('Partner data from server:', serverData);
@@ -55,6 +60,8 @@ export function usePartnerSync(userId: number): PartnerSyncResult {
             
             console.log('Syncing partner data to local DB:', partnerInfo);
             
+            // Удаляем старого партнера, если есть, и добавляем нового
+            await database.removePartner(userId);
             await database.addPartner(
               partnerInfo.userId,
               partnerInfo.partnerTelegramId,
@@ -68,14 +75,26 @@ export function usePartnerSync(userId: number): PartnerSyncResult {
             const updatedPartner = await database.getPartner(userId);
             setPartner(updatedPartner);
           } else {
+            // Если на сервере нет партнера, удаляем из локальной базы
+            await database.removePartner(userId);
             setPartner(null);
           }
         } else {
-          setPartner(null);
+          // Если сервер недоступен, используем локальные данные
+          if (dbPartner && dbPartner.id && dbPartner.partner_name && dbPartner.partner_telegram_id) {
+            setPartner(dbPartner);
+          } else {
+            setPartner(null);
+          }
         }
       } catch (serverError) {
         console.error('Error fetching from server:', serverError);
-        setPartner(null);
+        // Используем локальные данные как fallback
+        if (dbPartner && dbPartner.id && dbPartner.partner_name && dbPartner.partner_telegram_id) {
+          setPartner(dbPartner);
+        } else {
+          setPartner(null);
+        }
       }
     } catch (error) {
       console.error('Error refreshing partner:', error);

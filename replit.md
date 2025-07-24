@@ -25,6 +25,7 @@ Preferred communication style: Simple, everyday language.
 **Date**: July 24, 2025 - Fixed infinite screen switching bug: Consolidated partner status hooks, optimized API polling (15s intervals), improved welcome screen logic
 **Date**: July 24, 2025 - Implemented bilateral partner disconnect functionality: Added disconnect button in profile, bidirectional partnership removal, smooth screen transitions without notifications
 **Date**: July 24, 2025 - Migration completed successfully: Fixed user ID consistency in development mode for proper partnership display, updated mock user data generation to be persistent across sessions
+**Date**: July 24, 2025 - Fixed critical partner display bug: Updated usePartnerSync hook to use Telegram user ID for API calls instead of local database ID, ensuring server partnerships are correctly displayed in UI
 
 ### Referral System Implementation (Completed)
 **Date**: July 24, 2025 - Successfully implemented comprehensive referral-based partner connection system

@@ -100,6 +100,7 @@ export default function Profile() {
   const isViewingPartner = Boolean(partnerId);
   
   // Use the partner sync hook for real-time updates
+  // Pass local user ID for database operations, but hook will use Telegram ID for API calls
   const { partner: syncedPartner, isLoading: partnerLoading, refreshPartner } = usePartnerSync(user?.id ? parseInt(user.id) : 0);
 
   // Convert synced partner to PartnerProfile format

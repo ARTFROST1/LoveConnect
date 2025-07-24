@@ -22,6 +22,7 @@ export default function Home() {
   const { isProcessing: referralProcessing, referralProcessed } = useReferralProcessing();
 
   // Use unified partner sync for consistent partner management
+  // Pass local user ID for database operations, but hook will use Telegram ID for API calls
   const { partner: syncedPartner, isLoading: partnerLoading, refreshPartner } = usePartnerSync(user?.id ? parseInt(user.id) : 0);
 
   // Convert synced partner to PartnerProfile format

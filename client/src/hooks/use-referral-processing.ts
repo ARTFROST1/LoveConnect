@@ -104,8 +104,22 @@ export function useReferralProcessing(): ReferralProcessingResult {
         if (result.partnership) {
           console.log('Creating local partnership:', result.partnership);
           
+          // Получаем локального пользователя из базы данных
+          await database.initialize();
+          let dbUser = await database.getUser(currentUser.id.toString());
+          
+          if (!dbUser) {
+            // Создаем пользователя в локальной базе, если его нет
+            dbUser = await database.createUser(
+              currentUser.id.toString(),
+              currentUser.first_name || `Пользователь ${currentUser.id}`,
+              currentUser.photo_url === undefined ? null : currentUser.photo_url
+            );
+            console.log('Created local user:', dbUser);
+          }
+          
           const newPartner = {
-            userId: currentUser.id, // Используем реальный ID пользователя
+            userId: parseInt(dbUser.id), // Используем локальный ID пользователя из базы
             partnerTelegramId: result.partnership.referrerId,
             partnerName: result.partnership.referrerName || `Пользователь ${result.partnership.referrerId}`,
             partnerAvatar: null,
