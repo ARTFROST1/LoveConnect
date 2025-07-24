@@ -17,6 +17,7 @@ Preferred communication style: Simple, everyday language.
 
 **Date**: July 23, 2025 - Issue fixed by updating WebApp URL in system.
 **Date**: July 24, 2025 - Upgraded to use new working URL: `https://a14f2b3f-23b7-4c7f-9880-b16a8d739822-00-3bbojmz63mcbx.spock.replit.dev`
+**Date**: July 24, 2025 - Successfully migrated from Replit Agent to full Replit environment with enhanced startapp parameter support
 
 ## System Architecture
 
@@ -62,12 +63,15 @@ Preferred communication style: Simple, everyday language.
 - **Theme Support**: Light/dark mode following Telegram app theme
 
 ### Telegram Integration
-- **WebApp API**: Full integration with Telegram WebApp features with start_param processing
+- **WebApp API**: Full integration with Telegram WebApp features with startapp parameter processing
 - **Telegram Bot**: Complete bot implementation (@duolove_bot) for handling invite links and launching WebApp
-- **Deep Link System**: Automatic partner invitation processing via https://t.me/duolove_bot?start=invite_{user_id}
+- **Deep Link System**: Modern startapp parameter support via https://t.me/duolove_bot/app?startapp=invite_{user_id}
+- **Legacy Support**: Backward compatibility with legacy start parameter format
 - **Auto-Invite Processing**: Automatic partner connection when users click invite links
 - **Bidirectional Partnerships**: Mutual partner relationships created automatically
 - **HTTPS WebApp URLs**: Proper Replit.app domain integration for Telegram WebApp compatibility
+- **Parameter Detection**: Multi-method parameter detection (initDataUnsafe, URL params, fragments)
+- **Retry Logic**: Robust retry mechanism for parameter detection with 5 attempts
 - **Haptic Feedback**: Touch feedback for enhanced user experience
 - **Main Button**: Context-aware primary action button
 - **Back Button**: Navigation support with Telegram's back button

@@ -230,13 +230,13 @@ class TelegramService {
     console.log('Current URL:', window.location.href);
     console.log('initDataUnsafe:', this.tg?.initDataUnsafe);
     
-    // Method 1: Check Telegram WebApp initDataUnsafe (primary method)
+    // Method 1: Check Telegram WebApp initDataUnsafe start_param (primary method for startapp)
     if (this.tg?.initDataUnsafe?.start_param) {
       console.log('Found start_param from Telegram WebApp initDataUnsafe:', this.tg.initDataUnsafe.start_param);
       return this.tg.initDataUnsafe.start_param;
     }
     
-    // Method 2: Check URL params (tgWebAppStartParam is official parameter)
+    // Method 2: Check URL params (tgWebAppStartParam is official parameter for startapp)
     const urlParams = new URLSearchParams(window.location.search);
     console.log('URL search params:', urlParams.toString());
     
@@ -246,14 +246,21 @@ class TelegramService {
       return startParam;
     }
     
-    // Method 3: Check regular start parameter
+    // Method 3: Check startapp parameter (new Telegram WebApp format)
+    startParam = urlParams.get('startapp');
+    if (startParam) {
+      console.log('Found start_param from startapp parameter:', startParam);
+      return startParam;
+    }
+    
+    // Method 4: Check regular start parameter (legacy format)
     startParam = urlParams.get('start');
     if (startParam) {
       console.log('Found start_param from start parameter:', startParam);
       return startParam;
     }
     
-    // Method 4: Check fragment (hash) parameters  
+    // Method 5: Check fragment (hash) parameters  
     const hash = window.location.hash.substring(1);
     console.log('URL hash:', hash);
     if (hash && hash.startsWith('start=')) {
@@ -262,7 +269,7 @@ class TelegramService {
       return hashStart;
     }
     
-    // Method 5: Development mode fallback
+    // Method 6: Development mode fallback
     if (this.isDevelopment) {
       startParam = urlParams.get('invite');
       if (startParam) {
@@ -389,7 +396,7 @@ class TelegramService {
     }
     
     try {
-      // Use server API to generate invite link
+      // Use server API to generate invite link with startapp parameter
       const response = await fetch('/api/invite/generate', {
         method: 'POST',
         headers: {
@@ -406,9 +413,9 @@ class TelegramService {
       return data.inviteLink;
     } catch (error) {
       console.error('Error generating invite link:', error);
-      // Fallback to manual generation
+      // Fallback to manual generation with startapp parameter
       const botUsername = import.meta.env.VITE_BOT_USERNAME || 'duolove_bot';
-      return `https://t.me/${botUsername}?start=invite_${userId}`;
+      return `https://t.me/${botUsername}/app?startapp=invite_${userId}`;
     }
   }
 

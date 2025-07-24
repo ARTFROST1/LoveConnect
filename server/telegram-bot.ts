@@ -212,18 +212,19 @@ class DuoLoveTelegramBot {
     }
   }
 
-  // Method to generate invite link
+  // Method to generate invite link using startapp parameter (as per Telegram WebApp specification)
   async generateInviteLink(userId: string): Promise<string> {
     try {
       // Get bot info to get the actual username
       const botInfo = await this.getBotInfo();
       const botUsername = botInfo?.username || 'duolove_bot';
       
-      return `https://t.me/${botUsername}?start=invite_${userId}`;
+      // Use the new startapp parameter format for Telegram WebApp
+      return `https://t.me/${botUsername}/app?startapp=invite_${userId}`;
     } catch (error) {
       console.error('Error generating invite link:', error);
-      // Fallback - the user provided bot token suggests the username
-      return `https://t.me/duolove_bot?start=invite_${userId}`;
+      // Fallback - use the default bot username with startapp parameter
+      return `https://t.me/duolove_bot/app?startapp=invite_${userId}`;
     }
   }
 
