@@ -245,7 +245,7 @@ export default function Home() {
                 {partner ? (
                   <div className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center space-x-1">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span>Партнёр подключён</span>
+                    <span>✓ Партнёр подключён</span>
                   </div>
                 ) : partnerLoading ? (
                   <div className="text-xs text-gray-500 dark:text-gray-400 font-medium flex items-center space-x-1">
@@ -253,10 +253,14 @@ export default function Home() {
                     <span>Загружаем данные...</span>
                   </div>
                 ) : (
-                  <div className="text-xs text-gray-500 dark:text-gray-400 font-medium flex items-center space-x-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                    <span>Найти партнёра</span>
-                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => navigate('/add-partner')}
+                    className="text-primary border-primary hover:bg-primary hover:text-white transition-colors text-xs py-1 px-3"
+                  >
+                    Найти партнёра
+                  </Button>
                 )}
                 {!partnerLoading && (
                   <button 

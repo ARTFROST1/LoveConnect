@@ -35,7 +35,8 @@ import {
   Users,
   ArrowLeft,
   UserX,
-  Settings
+  Settings,
+  RefreshCw
 } from "lucide-react";
 import { database } from "@/lib/database";
 import { telegramService } from "@/lib/telegram";
@@ -540,9 +541,9 @@ export default function Profile() {
             {/* Relationship Info */}
             {relationshipPartner ? (
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mx-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">В отношениях с</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">В отношениях с</p>
                 <div 
-                  className="flex items-center justify-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
+                  className="flex items-center justify-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity mb-3"
                   onClick={handlePartnerClick}
                 >
                   <Avatar className="w-8 h-8">
@@ -558,11 +559,46 @@ export default function Profile() {
                     </p>
                   </div>
                 </div>
+                
+                {/* Disconnect Button - только для собственного профиля */}
+                {!isViewingPartner && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRemovePartner}
+                    disabled={isRemovingPartner}
+                    className="w-full text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 text-xs py-2"
+                  >
+                    {isRemovingPartner ? (
+                      <>
+                        <RefreshCw className="w-3 h-3 mr-2 animate-spin" />
+                        Разрываем связь...
+                      </>
+                    ) : (
+                      <>
+                        <UserX className="w-3 h-3 mr-2" />
+                        Разорвать связь с партнёром
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             ) : (
-              <p className="text-gray-500 dark:text-gray-400 text-sm">
-                {isViewingPartner ? "Данные недоступны" : "Партнёр не добавлен"}
-              </p>
+              <div className="text-center mx-4">
+                <p className="text-gray-500 dark:text-gray-400 text-sm mb-3">
+                  {isViewingPartner ? "Данные недоступны" : "Партнёр не добавлен"}
+                </p>
+                {!isViewingPartner && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate('/add-partner')}
+                    className="text-primary border-primary hover:bg-primary hover:text-white text-xs py-2"
+                  >
+                    Найти партнёра
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         </div>

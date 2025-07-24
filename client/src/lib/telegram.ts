@@ -129,6 +129,41 @@ class TelegramService {
     // Extract start param from URL for development mode
     const urlParams = new URLSearchParams(window.location.search);
     const startParam = urlParams.get('tgWebAppStartParam') || urlParams.get('start');
+    const testUserId = urlParams.get('testUserId');
+    
+    if (testUserId) {
+      // Use test user ID from URL parameter with realistic names
+      const mockUsers: {[key: string]: any} = {
+        '674146900': {
+          id: 674146900,
+          first_name: 'Александр',
+          last_name: 'Петров',
+          username: 'alex_petrov',
+          language_code: 'ru',
+          photo_url: undefined
+        },
+        '146775779': {
+          id: 146775779,
+          first_name: 'Мария',
+          last_name: 'Иванова',
+          username: 'maria_ivanova',
+          language_code: 'ru',
+          photo_url: undefined
+        }
+      };
+      
+      return {
+        user: mockUsers[testUserId] || {
+          id: parseInt(testUserId),
+          first_name: `Пользователь`,
+          last_name: `${testUserId}`,
+          username: `user${testUserId}`,
+          language_code: 'ru',
+          photo_url: undefined
+        },
+        start_param: startParam || undefined
+      };
+    }
     
     // Генерируем уникальный ID пользователя на основе localStorage или создаем новый
     let mockUserId = localStorage.getItem('mock_user_id');
