@@ -51,6 +51,25 @@ export const achievements = pgTable("achievements", {
   unlockedAt: text("unlocked_at").notNull(),
 });
 
+// Hearts table for daily gifts
+export const hearts = pgTable("hearts", {
+  id: serial("id").primaryKey(),
+  fromUserId: integer("from_user_id").notNull(),
+  toUserId: integer("to_user_id").notNull(),
+  giftedAt: text("gifted_at").notNull(),
+  message: text("message"),
+});
+
+// Activity log table
+export const activities = pgTable("activities", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  type: text("type").notNull(), // 'game_completed', 'heart_received', 'achievement_unlocked', etc.
+  description: text("description").notNull(),
+  timestamp: text("timestamp").notNull(),
+  metadata: text("metadata"), // JSON string for additional data
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   telegramId: true,
   name: true,
@@ -90,6 +109,21 @@ export const insertAchievementSchema = createInsertSchema(achievements).pick({
   unlockedAt: true,
 });
 
+export const insertHeartSchema = createInsertSchema(hearts).pick({
+  fromUserId: true,
+  toUserId: true,
+  giftedAt: true,
+  message: true,
+});
+
+export const insertActivitySchema = createInsertSchema(activities).pick({
+  userId: true,
+  type: true,
+  description: true,
+  timestamp: true,
+  metadata: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertPartner = z.infer<typeof insertPartnerSchema>;
@@ -100,3 +134,7 @@ export type InsertGameAction = z.infer<typeof insertGameActionSchema>;
 export type GameAction = typeof gameActions.$inferSelect;
 export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
 export type Achievement = typeof achievements.$inferSelect;
+export type InsertHeart = z.infer<typeof insertHeartSchema>;
+export type Heart = typeof hearts.$inferSelect;
+export type InsertActivity = z.infer<typeof insertActivitySchema>;
+export type Activity = typeof activities.$inferSelect;
