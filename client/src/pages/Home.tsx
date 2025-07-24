@@ -183,14 +183,8 @@ export default function Home() {
     }
   ];
 
-  // Убираем экран загрузки при переходе на главную - показываем интерфейс сразу
-  // if (loading) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center">
-  //       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-  //     </div>
-  //   );
-  // }
+  // Экран загрузки для обработки реферальных ссылок теперь в App.tsx
+  // Здесь убираем дублирующую логику
 
   // Показываем экран "Добро пожаловать" только если:
   // 1. Данные загружены (!loading)
