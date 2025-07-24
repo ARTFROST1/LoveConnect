@@ -19,7 +19,8 @@ Preferred communication style: Simple, everyday language.
 **Date**: July 24, 2025 - Upgraded to use new working URL: `https://a14f2b3f-23b7-4c7f-9880-b16a8d739822-00-3bbojmz63mcbx.spock.replit.dev`
 **Date**: July 24, 2025 - Successfully migrated from Replit Agent to full Replit environment with enhanced startapp parameter support
 **Date**: July 24, 2025 - Fixed unique referral link generation: Each user now gets unique mock ID in development mode, ensuring unique referral codes contain actual user ID
-**Date**: July 24, 2025 - Migration completed: Updated WebApp URL to `https://c34bdb7e-dfa1-4c8a-aa1b-8f777b5d3f87-00-c9owacf64x45.worf.replit.dev` and configured Telegram bot token
+**Date**: July 24, 2025 - Migration completed: Updated WebApp URL to `https://bec6c78b-06ef-4930-9a8b-998a96781359-00-25nm89kud5pzr.picard.replit.dev` and configured Telegram bot token
+**Date**: July 24, 2025 - Full migration from Replit Agent to Replit environment completed with user's custom WebApp URL and bot token integration
 
 ### Referral System Implementation (Completed)
 **Date**: July 24, 2025 - Successfully implemented comprehensive referral-based partner connection system
@@ -34,7 +35,7 @@ Preferred communication style: Simple, everyday language.
 - Updated page AddPartnerNew.tsx with modern referral UI
 - Comprehensive test page at `/referral-test` for validation
 - Proper Telegram WebApp link generation: `https://t.me/duolove_bot/DuoLove?startapp={referral_code}`
-- Updated WebApp URL to current Replit instance: `https://c34bdb7e-dfa1-4c8a-aa1b-8f777b5d3f87-00-c9owacf64x45.worf.replit.dev`
+- Updated WebApp URL to current Replit instance: `https://bec6c78b-06ef-4930-9a8b-998a96781359-00-25nm89kud5pzr.picard.replit.dev`
 - Telegram bot integration: `@duolove_bot` with WebApp name `DuoLove`
 - Startapp parameter processing in use-referral-processing hook
 - Backward compatibility with existing partner management system

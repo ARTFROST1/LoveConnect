@@ -10,7 +10,7 @@
 ```typescript
 // Строка ~15
 this.webAppUrl = process.env.WEBAPP_URL || 
-  'НОВЫЙ_URL_ЗДЕСЬ';  // <- Заменить на актуальный URL
+  'https://bec6c78b-06ef-4930-9a8b-998a96781359-00-25nm89kud5pzr.picard.replit.dev';  // <- Заменить на актуальный URL
 ```
 
 #### Файл: `replit.md`
