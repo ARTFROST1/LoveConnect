@@ -1,159 +1,70 @@
 import { useState } from 'react';
-import { telegramService } from '@/lib/telegram';
-import { database } from '@/lib/database';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
+import { telegramService } from '@/lib/telegram';
 
 export default function TestInvite() {
-  const [inviteId, setInviteId] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { toast } = useToast();
+  const [testUrl, setTestUrl] = useState('');
 
-  const testInviteProcessing = async () => {
-    if (!inviteId.trim()) {
-      toast({
-        title: "Ошибка",
-        description: "Введите ID пользователя для приглашения",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsProcessing(true);
-
-    try {
-      // Simulate invite processing
-      const currentUser = telegramService.user;
-      if (!currentUser) {
-        throw new Error('No user data available');
-      }
-
-      await database.initialize();
-
-      // Create/get current user in database
-      let dbUser = await database.getUser(currentUser.id.toString());
-      if (!dbUser) {
-        dbUser = await database.createUser(
-          currentUser.id.toString(),
-          `${currentUser.first_name} ${currentUser.last_name || ''}`.trim(),
-          currentUser.photo_url || null
-        );
-      }
-
-      // Check if partner already exists
-      const existingPartner = await database.getPartner(dbUser.id);
-      if (existingPartner) {
-        toast({
-          title: "Уведомление",
-          description: "У вас уже есть партнёр",
-          variant: "default"
-        });
-        return;
-      }
-
-      // Add partner
-      await database.addPartner(
-        dbUser.id,
-        inviteId,
-        `Пользователь ${inviteId}`,
-        null
-      );
-
-      toast({
-        title: "Успешно!",
-        description: `Партнёр ${inviteId} добавлен`,
-      });
-
-      telegramService.hapticFeedback('notification', 'success');
-
-    } catch (error) {
-      console.error('Error processing test invite:', error);
-      toast({
-        title: "Ошибка",
-        description: error instanceof Error ? error.message : 'Не удалось обработать приглашение',
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const getCurrentInfo = () => {
-    const user = telegramService.user;
-    const startParam = telegramService.startParam;
+  const handleTestInvite = () => {
+    const inviteId = '803210627'; // Тестовый ID
+    const testUrlWithHash = `${window.location.origin}#start=invite_${inviteId}`;
     
-    return {
-      userId: user?.id,
-      userName: user?.first_name,
-      startParam,
-      isDevelopment: telegramService.isDevelopment,
-      urlParams: window.location.search
-    };
+    console.log('Test URL generated:', testUrlWithHash);
+    window.location.href = testUrlWithHash;
+    window.location.reload();
   };
 
-  const info = getCurrentInfo();
+  const handleManualTest = () => {
+    if (testUrl) {
+      window.location.href = testUrl;
+      window.location.reload();
+    }
+  };
+
+  const currentHash = window.location.hash;
+  const currentStartParam = telegramService.startParam;
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="min-h-screen p-4">
       <Card>
         <CardHeader>
-          <CardTitle>Тест системы приглашений</CardTitle>
-          <CardDescription>
-            Используйте эту страницу для тестирования логики обработки приглашений
-          </CardDescription>
+          <CardTitle>Тест пригласительных ссылок</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <h3 className="font-semibold">Текущая информация:</h3>
-            <div className="text-sm space-y-1 bg-gray-100 dark:bg-gray-800 p-3 rounded">
-              <div>User ID: {info.userId || 'N/A'}</div>
-              <div>User Name: {info.userName || 'N/A'}</div>
-              <div>Start Param: {info.startParam || 'Нет'}</div>
-              <div>Development Mode: {info.isDevelopment ? 'Да' : 'Нет'}</div>
-              <div>URL Params: {info.urlParams || 'Нет'}</div>
-            </div>
+          <div>
+            <h3 className="font-semibold mb-2">Текущее состояние:</h3>
+            <p>Hash: {currentHash || 'отсутствует'}</p>
+            <p>Start Param: {currentStartParam || 'отсутствует'}</p>
           </div>
-
-          <div className="space-y-2">
-            <h3 className="font-semibold">Тестирование приглашения:</h3>
+          
+          <div>
+            <h3 className="font-semibold mb-2">Быстрый тест:</h3>
+            <Button onClick={handleTestInvite}>
+              Протестировать приглашение
+            </Button>
+          </div>
+          
+          <div>
+            <h3 className="font-semibold mb-2">Ручной тест:</h3>
             <div className="flex gap-2">
               <Input
-                placeholder="ID пользователя для приглашения"
-                value={inviteId}
-                onChange={(e) => setInviteId(e.target.value)}
-                disabled={isProcessing}
+                placeholder="Введите URL с #start=invite_..."
+                value={testUrl}
+                onChange={(e) => setTestUrl(e.target.value)}
               />
-              <Button 
-                onClick={testInviteProcessing} 
-                disabled={isProcessing}
-              >
-                {isProcessing ? 'Обработка...' : 'Тест'}
+              <Button onClick={handleManualTest}>
+                Перейти
               </Button>
             </div>
           </div>
-
-          <div className="space-y-2">
-            <h3 className="font-semibold">Тестовые ссылки:</h3>
-            <div className="text-sm space-y-1">
-              <div>
-                <a 
-                  href="?invite=invite_12345"
-                  className="text-blue-600 dark:text-blue-400 underline"
-                >
-                  Тест с параметром invite_12345
-                </a>
-              </div>
-              <div>
-                <a 
-                  href="?tgWebAppStartParam=invite_67890"
-                  className="text-blue-600 dark:text-blue-400 underline"
-                >
-                  Тест с tgWebAppStartParam=invite_67890
-                </a>
-              </div>
-            </div>
+          
+          <div>
+            <h3 className="font-semibold mb-2">Пример корректного URL:</h3>
+            <code className="text-sm bg-gray-100 p-2 rounded block">
+              {window.location.origin}#start=invite_803210627
+            </code>
           </div>
         </CardContent>
       </Card>

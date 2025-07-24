@@ -16,13 +16,21 @@ export function useInviteProcessing(): InviteProcessingResult {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Add longer delay to ensure Telegram WebApp is fully initialized
-    // Telegram WebApp might need more time to pass start_param properly
-    const timer = setTimeout(() => {
-      processInviteIfPresent();
-    }, 2000);
+    // Process invite immediately and with retry
+    const processWithRetry = async () => {
+      // First attempt immediately
+      await processInviteIfPresent();
+      
+      // If no invite found, try again after short delay
+      // This handles cases where WebApp needs time to initialize
+      setTimeout(async () => {
+        if (!inviteProcessed && !isProcessing) {
+          await processInviteIfPresent();
+        }
+      }, 1000);
+    };
 
-    return () => clearTimeout(timer);
+    processWithRetry();
   }, []);
 
   const processInviteIfPresent = async () => {
@@ -74,8 +82,13 @@ export function useInviteProcessing(): InviteProcessingResult {
 
       // Check if partner relationship already exists
       const existingPartner = await database.getPartner(dbUser.id);
-      if (existingPartner) {
-        console.log('Partner relationship already exists');
+      if (existingPartner && existingPartner.id && existingPartner.partner_name) {
+        console.log('Partner relationship already exists, ignoring invite');
+        toast({
+          title: "Приглашение проигнорировано",
+          description: "У вас уже есть партнёр. Сначала разорвите текущую связь.",
+          duration: 3000
+        });
         setInviteProcessed(true);
         return;
       }

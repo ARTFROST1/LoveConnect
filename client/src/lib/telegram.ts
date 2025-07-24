@@ -178,13 +178,24 @@ class TelegramService {
   }
 
   get startParam() {
-    // First try to get from Telegram WebApp
+    // Method 1: Check fragment (hash) parameters - primary method for WebApp
+    const hash = window.location.hash.substring(1);
+    if (hash) {
+      // Direct check for start parameter in hash
+      if (hash.startsWith('start=')) {
+        const hashStart = hash.replace('start=', '');
+        console.log('Found start_param from hash (direct):', hashStart);
+        return hashStart;
+      }
+    }
+    
+    // Method 2: Try to get from Telegram WebApp initDataUnsafe
     if (this.tg?.initDataUnsafe?.start_param) {
       console.log('Found start_param from Telegram WebApp:', this.tg.initDataUnsafe.start_param);
       return this.tg.initDataUnsafe.start_param;
     }
     
-    // Check URL params for both development and as fallback
+    // Method 3: Check URL params as fallback
     const urlParams = new URLSearchParams(window.location.search);
     let startParam = urlParams.get('tgWebAppStartParam') || urlParams.get('start') || null;
     
@@ -230,13 +241,21 @@ class TelegramService {
         return `invite_${invitedBy}`;
       }
 
-      // Method 4: Check fragment (hash) parameters as alternative
+      // Method 4: Check fragment (hash) parameters - primary method for WebApp
       const hash = window.location.hash.substring(1);
       if (hash) {
+        // Direct check for start parameter in hash
+        if (hash.startsWith('start=')) {
+          const hashStart = hash.replace('start=', '');
+          console.log('Found start param in hash (direct):', hashStart);
+          return hashStart;
+        }
+        
+        // Alternative check using URLSearchParams
         const hashParams = new URLSearchParams(hash);
         const hashStart = hashParams.get('start');
         if (hashStart) {
-          console.log('Found start param in hash:', hashStart);
+          console.log('Found start param in hash (URLSearchParams):', hashStart);
           return hashStart;
         }
       }
