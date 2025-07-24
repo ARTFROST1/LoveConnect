@@ -91,6 +91,11 @@
     50% { transform: scale(1.05); }
   }
 
+  @keyframes gentlePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+  }
+
   @keyframes bounceSoft {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.02); }
@@ -111,6 +116,10 @@
 
   .animate-bounce-soft {
     animation: bounceSoft 1s ease-out;
+  }
+
+  .animate-gentle-pulse {
+    animation: gentlePulse 3s ease-in-out infinite;
   }
 
   /* Mobile-first responsive design optimizations */
