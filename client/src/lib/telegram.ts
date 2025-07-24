@@ -95,10 +95,11 @@ class TelegramService {
         this.isInitialized = true;
         
         // Create mock WebApp object for development
+        const mockInitData = this.createMockInitData();
         this.tg = {
           version: '7.0',
           initData: '',
-          initDataUnsafe: this.createMockInitData(),
+          initDataUnsafe: mockInitData,
           colorScheme: 'light',
           ready: () => {},
           expand: () => {},
@@ -202,7 +203,7 @@ class TelegramService {
       return this.tg.initDataUnsafe.user;
     }
     
-    // Development fallback with more realistic data
+    // Development fallback with consistent mock data
     if (this.isDevelopment) {
       // Check if we have a different user in URL params for testing invite links
       const urlParams = new URLSearchParams(window.location.search);
@@ -219,11 +220,19 @@ class TelegramService {
         };
       }
       
+      // Use the same mock user ID that was created in createMockInitData()
+      let mockUserId = localStorage.getItem('mock_user_id');
+      if (!mockUserId) {
+        // Fallback to creating one if not found
+        mockUserId = Math.floor(Math.random() * 1000000000).toString();
+        localStorage.setItem('mock_user_id', mockUserId);
+      }
+      
       return {
-        id: 123456789,
-        first_name: "Тестовый",
-        last_name: "Пользователь",
-        username: "test_user",
+        id: parseInt(mockUserId),
+        first_name: `User${mockUserId.slice(-4)}`,
+        last_name: "Test",
+        username: `testuser${mockUserId.slice(-4)}`,
         language_code: "ru",
         photo_url: null
       };

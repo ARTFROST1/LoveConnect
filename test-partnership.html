@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Partnership Display</title>
+</head>
+<body>
+    <h1>Partnership Test Links</h1>
+    <p>Click these links to test partnership display with correct user IDs:</p>
+    
+    <h2>User 674146900 (should see partner 146775779)</h2>
+    <a href="/?testUserId=674146900" target="_blank">Test User 674146900</a>
+    
+    <h2>User 146775779 (should see partner 674146900)</h2>
+    <a href="/?testUserId=146775779" target="_blank">Test User 146775779</a>
+    
+    <h2>Regular User (should see no partner)</h2>
+    <a href="/" target="_blank">Regular User</a>
+    
+    <script>
+        // Log current partnerships for debugging
+        fetch('/api/partner/status/674146900')
+            .then(r => r.json())
+            .then(data => console.log('User 674146900 partnership:', data));
+            
+        fetch('/api/partner/status/146775779')
+            .then(r => r.json())
+            .then(data => console.log('User 146775779 partnership:', data));
+    </script>
+</body>
+</html>
