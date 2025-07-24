@@ -6,6 +6,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Heart, 
   Trophy, 
@@ -21,7 +33,8 @@ import {
   TrendingUp,
   Camera,
   Users,
-  ArrowLeft
+  ArrowLeft,
+  UserX
 } from "lucide-react";
 import { database } from "@/lib/database";
 import { telegramService } from "@/lib/telegram";
@@ -77,6 +90,8 @@ export default function Profile() {
     maxScore: 0
   });
   const [loading, setLoading] = useState(true);
+  const [isRemovingPartner, setIsRemovingPartner] = useState(false);
+  const { toast } = useToast();
 
   // Check if we're viewing a partner's profile
   const urlParams = new URLSearchParams(location.split('?')[1] || '');
@@ -340,6 +355,41 @@ export default function Profile() {
       navigate('/profile');
     } else {
       window.history.back();
+    }
+  };
+
+  const handleRemovePartner = async () => {
+    if (!user || !partner) return;
+    
+    try {
+      setIsRemovingPartner(true);
+      telegramService.hapticFeedback('impact_heavy');
+      
+      // Remove partner from database
+      await database.removePartner(parseInt(user.id));
+      
+      // Show success toast
+      toast({
+        title: "Связь разорвана",
+        description: "Вы больше не связаны с партнёром. Вы можете добавить нового.",
+        duration: 5000
+      });
+      
+      // Trigger partner sync refresh and navigate to home
+      setTimeout(() => {
+        navigate('/');
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Failed to remove partner:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось разорвать связь. Попробуйте снова.",
+        variant: "destructive",
+        duration: 5000
+      });
+    } finally {
+      setIsRemovingPartner(false);
     }
   };
 
@@ -729,6 +779,52 @@ export default function Profile() {
             </TabsContent>
           </Tabs>
         </div>
+
+        {/* Disconnect Partner Section - Only shown on user's own profile and when partner exists */}
+        {!isViewingPartner && partner && (
+          <div className="px-4 mt-8 mb-8">
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="w-full bg-red-50 border-red-200 text-red-600 hover:bg-red-100 hover:border-red-300 hover:text-red-700 dark:bg-red-950/30 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/50 dark:hover:border-red-700"
+                    disabled={isRemovingPartner}
+                  >
+                    <UserX className="w-4 h-4 mr-2" />
+                    {isRemovingPartner ? "Разрываем связь..." : "Разорвать связь с партнёром"}
+                  </Button>
+                </AlertDialogTrigger>
+                
+                <AlertDialogContent className="max-w-sm mx-auto">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-center">
+                      Разорвать связь?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="text-center">
+                      Вы уверены, что хотите разорвать связь с партнёром <strong>{partner.name}</strong>?
+                      <br /><br />
+                      Это действие удалит текущую пару, и вы оба снова увидите экран добавления партнёра.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  
+                  <AlertDialogFooter className="flex-col space-y-2 sm:flex-col sm:space-x-0 sm:space-y-2">
+                    <AlertDialogAction
+                      onClick={handleRemovePartner}
+                      className="w-full bg-red-500 hover:bg-red-600 text-white order-2"
+                      disabled={isRemovingPartner}
+                    >
+                      {isRemovingPartner ? "Разрываем..." : "Разорвать"}
+                    </AlertDialogAction>
+                    <AlertDialogCancel className="w-full order-1" disabled={isRemovingPartner}>
+                      Отмена
+                    </AlertDialogCancel>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

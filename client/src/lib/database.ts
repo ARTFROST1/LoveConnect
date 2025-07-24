@@ -298,6 +298,16 @@ class SQLiteDatabase {
     
     return results;
   }
+
+  async removePartner(userId: number): Promise<void> {
+    if (!this.db) await this.initialize();
+    
+    const stmt = this.db!.prepare('DELETE FROM partners WHERE user_id = ?');
+    stmt.run([userId]);
+    stmt.free();
+    
+    this.saveDatabase();
+  }
 }
 
 export const database = new SQLiteDatabase();
