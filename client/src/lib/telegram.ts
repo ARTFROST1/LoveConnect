@@ -129,12 +129,20 @@ class TelegramService {
     const urlParams = new URLSearchParams(window.location.search);
     const startParam = urlParams.get('tgWebAppStartParam') || urlParams.get('start');
     
+    // Генерируем уникальный ID пользователя на основе localStorage или создаем новый
+    let mockUserId = localStorage.getItem('mock_user_id');
+    if (!mockUserId) {
+      // Создаем уникальный ID для каждого пользователя в браузере
+      mockUserId = Math.floor(Math.random() * 1000000000).toString();
+      localStorage.setItem('mock_user_id', mockUserId);
+    }
+    
     return {
       user: {
-        id: 803210627, // Mock user ID for development
-        first_name: 'Test',
-        last_name: 'User',
-        username: 'testuser'
+        id: parseInt(mockUserId), // Уникальный mock user ID для каждого браузера
+        first_name: `User${mockUserId.slice(-4)}`, // Показываем последние 4 цифры в имени
+        last_name: 'Test',
+        username: `testuser${mockUserId.slice(-4)}`
       },
       start_param: startParam || undefined
     };

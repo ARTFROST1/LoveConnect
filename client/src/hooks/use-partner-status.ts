@@ -4,6 +4,8 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface PartnerStatusHook {
   partnerStatus: any | null;
+  hasPartner: boolean;
+  partnerData: any | null;
   isLoading: boolean;
   refreshStatus: () => Promise<void>;
 }
@@ -12,6 +14,9 @@ export function usePartnerStatus(): PartnerStatusHook {
   const [partnerStatus, setPartnerStatus] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  const hasPartner = Boolean(partnerStatus);
+  const partnerData = partnerStatus;
 
   const refreshStatus = useCallback(async () => {
     try {
@@ -72,5 +77,5 @@ export function usePartnerStatus(): PartnerStatusHook {
     };
   }, [refreshStatus]);
 
-  return { partnerStatus, isLoading, refreshStatus };
+  return { partnerStatus, hasPartner, partnerData, isLoading, refreshStatus };
 }

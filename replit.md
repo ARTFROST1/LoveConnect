@@ -18,6 +18,7 @@ Preferred communication style: Simple, everyday language.
 **Date**: July 23, 2025 - Issue fixed by updating WebApp URL in system.
 **Date**: July 24, 2025 - Upgraded to use new working URL: `https://a14f2b3f-23b7-4c7f-9880-b16a8d739822-00-3bbojmz63mcbx.spock.replit.dev`
 **Date**: July 24, 2025 - Successfully migrated from Replit Agent to full Replit environment with enhanced startapp parameter support
+**Date**: July 24, 2025 - Fixed unique referral link generation: Each user now gets unique mock ID in development mode, ensuring unique referral codes contain actual user ID
 **Date**: July 24, 2025 - Migration completed: Updated WebApp URL to `https://c34bdb7e-dfa1-4c8a-aa1b-8f777b5d3f87-00-c9owacf64x45.worf.replit.dev` and configured Telegram bot token
 
 ### Referral System Implementation (Completed)
