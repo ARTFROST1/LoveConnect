@@ -178,98 +178,83 @@ class TelegramService {
   }
 
   get startParam() {
-    // Method 1: Check fragment (hash) parameters - primary method for WebApp
-    const hash = window.location.hash.substring(1);
-    if (hash) {
-      // Direct check for start parameter in hash
-      if (hash.startsWith('start=')) {
-        const hashStart = hash.replace('start=', '');
-        console.log('Found start_param from hash (direct):', hashStart);
-        return hashStart;
-      }
-    }
+    console.log('Getting start param, checking all sources...');
     
-    // Method 2: Try to get from Telegram WebApp initDataUnsafe
+    // Method 1: Check Telegram WebApp initDataUnsafe (primary method)
     if (this.tg?.initDataUnsafe?.start_param) {
-      console.log('Found start_param from Telegram WebApp:', this.tg.initDataUnsafe.start_param);
+      console.log('Found start_param from Telegram WebApp initDataUnsafe:', this.tg.initDataUnsafe.start_param);
       return this.tg.initDataUnsafe.start_param;
     }
     
-    // Method 3: Check URL params as fallback
+    // Method 2: Check URL params (tgWebAppStartParam is official parameter)
     const urlParams = new URLSearchParams(window.location.search);
-    let startParam = urlParams.get('tgWebAppStartParam') || urlParams.get('start') || null;
-    
-    // In development mode, also check for manually added invite parameter
-    if (!startParam && this.isDevelopment) {
-      startParam = urlParams.get('invite') || null;
-    }
-    
+    let startParam = urlParams.get('tgWebAppStartParam');
     if (startParam) {
-      console.log('Found start_param from URL:', startParam);
+      console.log('Found start_param from tgWebAppStartParam:', startParam);
+      return startParam;
     }
     
-    return startParam;
+    // Method 3: Check regular start parameter
+    startParam = urlParams.get('start');
+    if (startParam) {
+      console.log('Found start_param from start parameter:', startParam);
+      return startParam;
+    }
+    
+    // Method 4: Check fragment (hash) parameters  
+    const hash = window.location.hash.substring(1);
+    if (hash && hash.startsWith('start=')) {
+      const hashStart = hash.replace('start=', '');
+      console.log('Found start_param from hash:', hashStart);
+      return hashStart;
+    }
+    
+    // Method 5: Development mode fallback
+    if (this.isDevelopment) {
+      startParam = urlParams.get('invite');
+      if (startParam) {
+        console.log('Found start_param from invite (dev mode):', startParam);
+        return `invite_${startParam}`;
+      }
+    }
+    
+    console.log('No start_param found in any source');
+    return null;
   }
 
   // Get start param with retry logic for better reliability
-  async getStartParamWithRetry(maxRetries: number = 3, delayMs: number = 500): Promise<string | null> {
+  async getStartParamWithRetry(maxRetries: number = 5, delayMs: number = 300): Promise<string | null> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      console.log(`Attempt ${attempt}: Checking for start_param`, {
+      console.log(`Attempt ${attempt}/${maxRetries}: Checking for start_param`, {
         hasTelegram: !!this.tg,
         initDataUnsafe: this.tg?.initDataUnsafe || {},
-        urlParams: window.location.search
+        urlParams: window.location.search,
+        hash: window.location.hash
       });
 
-      // Method 1: Check Telegram WebApp initDataUnsafe
-      if (this.tg?.initDataUnsafe?.start_param) {
-        console.log('Found start_param in initDataUnsafe:', this.tg.initDataUnsafe.start_param);
-        return this.tg.initDataUnsafe.start_param;
+      // Use the main startParam getter which checks all sources
+      const startParam = this.startParam;
+      if (startParam) {
+        console.log(`Successfully found start_param on attempt ${attempt}:`, startParam);
+        return startParam;
       }
 
-      // Method 2: Check URL parameters (fallback)
-      const urlParams = new URLSearchParams(window.location.search);
-      const startFromUrl = urlParams.get('start');
-      if (startFromUrl) {
-        console.log('Found start param in URL:', startFromUrl);
-        return startFromUrl;
-      }
-
-      // Method 3: Check for invited_by parameter (alternative format)
-      const invitedBy = urlParams.get('invited_by');
-      if (invitedBy) {
-        console.log('Found invited_by param in URL:', invitedBy);
-        return `invite_${invitedBy}`;
-      }
-
-      // Method 4: Check fragment (hash) parameters - primary method for WebApp
-      const hash = window.location.hash.substring(1);
-      if (hash) {
-        // Direct check for start parameter in hash
-        if (hash.startsWith('start=')) {
-          const hashStart = hash.replace('start=', '');
-          console.log('Found start param in hash (direct):', hashStart);
-          return hashStart;
-        }
-        
-        // Alternative check using URLSearchParams
-        const hashParams = new URLSearchParams(hash);
-        const hashStart = hashParams.get('start');
-        if (hashStart) {
-          console.log('Found start param in hash (URLSearchParams):', hashStart);
-          return hashStart;
-        }
-      }
-
-      // Wait before next attempt
+      // If this is not the last attempt, wait before retrying
       if (attempt < maxRetries) {
+        console.log(`No start_param found on attempt ${attempt}, waiting ${delayMs}ms before retry...`);
         await new Promise(resolve => setTimeout(resolve, delayMs));
         
-        // Log current state for debugging
-        console.log(`Attempt ${attempt + 1}: Checking for start_param`, {
-          hasTelegram: !!this.tg,
-          initDataUnsafe: this.tg?.initDataUnsafe,
-          urlParams: window.location.search
-        });
+        // Force Telegram WebApp to refresh initData if available
+        if (this.tg && this.tg.ready) {
+          try {
+            // Try to refresh the WebApp data
+            this.tg.ready();
+          } catch (e) {
+            // Ignore errors in refresh attempts
+          }
+        }
+      } else {
+        console.log('All retry attempts exhausted, no start_param found');
       }
     }
     

@@ -8,11 +8,11 @@ export default function TestInvite() {
   const [testUrl, setTestUrl] = useState('');
 
   const handleTestInvite = () => {
-    const inviteId = '803210627'; // Тестовый ID
-    const testUrlWithHash = `${window.location.origin}#start=invite_${inviteId}`;
+    const inviteId = '7980324452'; // Тестовый ID (пригласитель)
+    const testUrlWithParam = `${window.location.origin}?tgWebAppStartParam=invite_${inviteId}`;
     
-    console.log('Test URL generated:', testUrlWithHash);
-    window.location.href = testUrlWithHash;
+    console.log('Test URL generated:', testUrlWithParam);
+    window.location.href = testUrlWithParam;
     window.location.reload();
   };
 
@@ -63,8 +63,15 @@ export default function TestInvite() {
           <div>
             <h3 className="font-semibold mb-2">Пример корректного URL:</h3>
             <code className="text-sm bg-gray-100 p-2 rounded block">
-              {window.location.origin}#start=invite_803210627
+              {window.location.origin}?tgWebAppStartParam=invite_7980324452
             </code>
+          </div>
+          
+          <div>
+            <h3 className="font-semibold mb-2">Telegram Bot:</h3>
+            <p className="text-sm">
+              Реальная ссылка: https://t.me/duolove_bot?start=invite_7980324452
+            </p>
           </div>
         </CardContent>
       </Card>

@@ -90,9 +90,9 @@ class DuoLoveTelegramBot {
     });
 
     try {
-      // For Telegram WebApp, the start parameter should be passed through URL fragment
-      // This ensures it's available in the WebApp properly
-      const webAppUrlWithParam = `${this.webAppUrl}#start=${startParam}`;
+      // For Telegram WebApp, pass start parameter via tgWebAppStartParam
+      // This is the proper way for Telegram to pass parameters to WebApp
+      const webAppUrlWithParam = `${this.webAppUrl}?tgWebAppStartParam=${startParam}`;
       
       const keyboard = {
         inline_keyboard: [[

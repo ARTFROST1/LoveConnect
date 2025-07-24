@@ -39,18 +39,18 @@ export function useInviteProcessing(): InviteProcessingResult {
       await telegramService.waitForInitialization();
       
       // Check if we have invite parameters with retry logic
-      const startParam = await telegramService.getStartParamWithRetry();
+      const startParam = await telegramService.getStartParamWithRetry(5, 500);
       
       console.log('Processing invite with startParam:', startParam);
       
       if (!startParam || !startParam.startsWith('invite_')) {
-        console.log('No valid invite parameter found');
-        // No invite to process - this is normal, not an error
+        console.log('No valid invite parameter found - this is normal for regular app opens');
         setInviteProcessed(false);
+        setError(null); // Clear any previous errors
         return;
       }
 
-      console.log('Found valid invite parameter, starting processing...');
+      console.log('Valid invite parameter found, processing invitation...');
       setIsProcessing(true);
       setError(null);
 
