@@ -187,29 +187,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Unlink partner (bilateral disconnection)
-  app.post("/api/unlink-partner", async (req, res) => {
+  // Remove partnership (bilateral disconnection)
+  app.post("/api/partner/disconnect", async (req, res) => {
     try {
-      const { user_id, partner_id } = req.body;
+      const { userId } = req.body;
       
-      if (!user_id || !partner_id) {
-        return res.status(400).json({ error: "Both user_id and partner_id are required" });
+      if (!userId) {
+        return res.status(400).json({ error: "User ID is required" });
       }
+
+      // Get current partnership before removing it
+      const currentPartnership = await storage.getPartnership(userId);
+      if (!currentPartnership) {
+        return res.status(404).json({ error: "No partnership found" });
+      }
+
+      // Remove partnership for both users (bidirectional removal)
+      await storage.removePartnership(userId);
+      await storage.removePartnership(currentPartnership.partnerId);
 
       // Notify both users about the disconnection via Telegram bot
       try {
-        await telegramBot.notifyPartnerDisconnection(user_id, partner_id);
+        await telegramBot.notifyPartnerDisconnection(userId, currentPartnership.partnerId);
       } catch (notifyError) {
         console.warn("Failed to notify users via Telegram bot:", notifyError);
       }
       
       res.json({ 
         success: true,
-        message: "Partner disconnection processed" 
+        message: "Partnership successfully disconnected" 
       });
     } catch (error) {
-      console.error("Error unlinking partner:", error);
-      res.status(500).json({ error: "Failed to unlink partner" });
+      console.error("Error disconnecting partnership:", error);
+      res.status(500).json({ error: "Failed to disconnect partnership" });
     }
   });
 

@@ -153,9 +153,10 @@ export class MemStorage implements IStorage {
   async removePartnership(userId: string): Promise<void> {
     const partnership = this.partnerships.get(userId);
     if (partnership) {
-      // Remove both sides of the partnership
+      // Remove partnership for this user only
+      // The bilateral removal should be handled by the route handler
       this.partnerships.delete(userId);
-      this.partnerships.delete(partnership.partnerId);
+      console.log(`Partnership removed for user: ${userId}`);
     }
   }
 }

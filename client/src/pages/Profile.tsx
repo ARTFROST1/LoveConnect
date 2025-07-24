@@ -373,24 +373,23 @@ export default function Profile() {
       setIsRemovingPartner(true);
       telegramService.hapticFeedback('impact');
       
-      // Send unlink request to server for bilateral disconnection
+      // Send disconnect request to server for bilateral disconnection
       try {
-        const response = await fetch('/api/unlink-partner', {
+        const response = await fetch('/api/partner/disconnect', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            user_id: user.telegramId,
-            partner_id: partner.telegramId
+            userId: user.telegramId
           })
         });
         
         if (!response.ok) {
-          throw new Error('Server unlink failed');
+          throw new Error('Server disconnect failed');
         }
       } catch (serverError) {
-        console.warn('Server unlink failed, proceeding with local unlink:', serverError);
+        console.warn('Server disconnect failed, proceeding with local disconnect:', serverError);
       }
       
       // Remove partner from local database
@@ -399,26 +398,12 @@ export default function Profile() {
       // Refresh partner state immediately
       await refreshPartner();
       
-      // Show success toast
-      toast({
-        title: "Связь разорвана",
-        description: "Вы больше не связаны с партнёром. Вы можете добавить нового.",
-        duration: 5000
-      });
-      
-      // Navigate to home page
-      setTimeout(() => {
-        navigate('/');
-      }, 1000);
+      // Navigate to home page immediately without toast notifications
+      navigate('/');
       
     } catch (error) {
-      console.error('Failed to remove partner:', error);
-      toast({
-        title: "Ошибка",
-        description: "Не удалось разорвать связь. Попробуйте снова.",
-        variant: "destructive",
-        duration: 5000
-      });
+      console.error('Failed to disconnect partner:', error);
+      // No toast notification per user requirement
     } finally {
       setIsRemovingPartner(false);
     }
