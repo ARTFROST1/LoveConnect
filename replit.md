@@ -19,15 +19,19 @@ Preferred communication style: Simple, everyday language.
 **Date**: July 24, 2025 - Upgraded to use new working URL: `https://a14f2b3f-23b7-4c7f-9880-b16a8d739822-00-3bbojmz63mcbx.spock.replit.dev`
 **Date**: July 24, 2025 - Successfully migrated from Replit Agent to full Replit environment with enhanced startapp parameter support
 
-### Enhanced startapp Implementation (Completed)
-**Problem**: Previous system used incorrect invite link format, causing startapp parameters to be lost
-**Root Cause**: Generated links like `https://replit.dev?startapp=...` instead of proper Telegram WebApp format
-**Solution**: Updated to generate correct `https://t.me/duolove_bot/app?startapp=invite_{id}` format
-**Features Added**:
-- Proper Telegram WebApp invite link generation
-- Enhanced parameter detection (startapp, tgWebAppStartParam, legacy support)  
-- Comprehensive test page at `/startapp-test` for validation
-- Full compatibility with Telegram WebApp API specification
+### Referral System Implementation (Completed)
+**Date**: July 24, 2025 - Successfully implemented comprehensive referral-based partner connection system
+**Problem**: Old invitation system was complex and relied on Telegram bot handling, causing connection issues
+**Solution**: Created new referral system with direct web-based links and automatic processing
+**Features Implemented**:
+- Complete referral code generation and management system
+- Server-side referral tracking with storage (MemStorage)
+- Client-side referral processing hooks (use-referral-processing, use-referral-link)
+- Automatic partner connection when users follow referral links
+- Enhanced API endpoints (/api/referral/generate, /api/referral/connect, /api/referral/stats)
+- Updated page AddPartnerNew.tsx with modern referral UI
+- Comprehensive test page at `/referral-test` for validation
+- Backward compatibility with existing partner management system
 
 ## System Architecture
 

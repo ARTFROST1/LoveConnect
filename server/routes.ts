@@ -9,8 +9,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: "ok" });
   });
 
-  // Generate invite link
-  app.post("/api/invite/generate", async (req, res) => {
+  // Реферальная система - генерация реферального кода
+  app.post("/api/referral/generate", async (req, res) => {
     try {
       const { userId } = req.body;
       
@@ -18,15 +18,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "User ID is required" });
       }
 
-      const inviteLink = await telegramBot.generateInviteLink(userId);
+      // Проверяем, есть ли уже реферальный код для этого пользователя
+      let referralCode = await storage.getReferralCode(userId);
+      
+      if (!referralCode) {
+        // Генерируем новый уникальный код
+        const code = `ref_${userId}_${Date.now().toString(36)}`;
+        referralCode = await storage.createReferralCode({
+          userId,
+          referralCode: code,
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      // Создаем полную ссылку
+      const baseUrl = process.env.WEBAPP_URL || 
+        'https://a14f2b3f-23b7-4c7f-9880-b16a8d739822-00-3bbojmz63mcbx.spock.replit.dev';
+      const referralLink = `${baseUrl}?ref=${referralCode.referralCode}`;
       
       res.json({ 
-        inviteLink,
+        referralCode: referralCode.referralCode,
+        referralLink,
         success: true 
       });
     } catch (error) {
-      console.error("Error generating invite link:", error);
-      res.status(500).json({ error: "Failed to generate invite link" });
+      console.error("Error generating referral code:", error);
+      res.status(500).json({ error: "Failed to generate referral code" });
+    }
+  });
+
+  // Обработка подключения по реферальному коду
+  app.post("/api/referral/connect", async (req, res) => {
+    try {
+      const { referralCode, userId, userName } = req.body;
+      
+      if (!referralCode || !userId || !userName) {
+        return res.status(400).json({ error: "Missing required parameters" });
+      }
+
+      // Находим реферальный код
+      const codeData = await storage.getReferralCodeByCode(referralCode);
+      if (!codeData) {
+        return res.status(404).json({ error: "Invalid referral code" });
+      }
+
+      // Проверяем, что пользователь не пытается использовать свой собственный код
+      if (codeData.userId === userId) {
+        return res.status(400).json({ error: "Cannot use your own referral code" });
+      }
+
+      // Проверяем, есть ли уже связь для этого пользователя
+      const existingConnection = await storage.getReferralConnection(userId);
+      if (existingConnection) {
+        return res.status(400).json({ error: "User already has a referral connection" });
+      }
+
+      // Создаем реферальную связь
+      const connection = await storage.createReferralConnection({
+        referrerId: codeData.userId,
+        referredId: userId,
+        referralCode: referralCode,
+        connectedAt: new Date().toISOString(),
+        status: 'active'
+      });
+
+      // Создаем партнерство в старой системе для совместимости
+      await storage.createPartnership(codeData.userId, userId, userName);
+
+      // Отправляем уведомление в Telegram
+      try {
+        await telegramBot.notifyPartnerConnection(codeData.userId, userId, userName);
+      } catch (notificationError) {
+        console.error('Failed to send Telegram notification:', notificationError);
+        // Не прерываем процесс, если уведомление не отправилось
+      }
+
+      res.json({ 
+        success: true,
+        partnership: {
+          connectionId: connection.id,
+          referrerId: codeData.userId,
+          referrerName: `Пользователь ${codeData.userId}` // В реальном проекте нужно получать имя из базы
+        }
+      });
+    } catch (error) {
+      console.error("Error connecting with referral code:", error);
+      res.status(500).json({ error: "Failed to process referral connection" });
+    }
+  });
+
+  // Получение статистики реферальной системы
+  app.get("/api/referral/stats/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      const referralCode = await storage.getReferralCode(userId);
+      const connections = await storage.getReferralConnections(userId);
+      
+      res.json({
+        referralCode: referralCode?.referralCode || null,
+        totalReferrals: connections.length,
+        activeReferrals: connections.filter(c => c.status === 'active').length,
+        connections: connections
+      });
+    } catch (error) {
+      console.error("Error getting referral stats:", error);
+      res.status(500).json({ error: "Failed to get referral stats" });
     }
   });
 

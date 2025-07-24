@@ -7,7 +7,7 @@ import { useEffect } from "react";
 
 // Import pages
 import Home from "@/pages/Home";
-import AddPartner from "@/pages/AddPartner";
+import AddPartner from "@/pages/AddPartnerNew";
 import GameList from "@/pages/GameList";
 import GameRoom from "@/pages/GameRoom";
 import History from "@/pages/History";
@@ -18,12 +18,13 @@ import TestInvite from "@/pages/TestInvite";
 import InviteTest from "@/pages/InviteTest";
 import PartnerTest from "@/pages/PartnerTest";
 import StartappTest from "@/pages/StartappTest";
+import ReferralTest from "@/pages/ReferralTest";
 import NotFound from "@/pages/not-found";
 
 // Import services
 import { telegramService } from "@/lib/telegram";
 import { database } from "@/lib/database";
-import { useInviteProcessing } from "@/hooks/use-invite-processing";
+import { useReferralProcessing } from "@/hooks/use-referral-processing";
 
 function Router() {
   return (
@@ -41,6 +42,7 @@ function Router() {
         <Route path="/invite-test" component={InviteTest} />
         <Route path="/partner-test" component={PartnerTest} />
         <Route path="/startapp-test" component={StartappTest} />
+        <Route path="/referral-test" component={ReferralTest} />
         <Route component={NotFound} />
       </Switch>
       <Navigation />
@@ -49,8 +51,8 @@ function Router() {
 }
 
 function App() {
-  // Process invite links automatically when app starts
-  const { isProcessing: isProcessingInvite } = useInviteProcessing();
+  // Process referral links automatically when app starts
+  const { isProcessing: isProcessingReferral } = useReferralProcessing();
 
   useEffect(() => {
     // Initialize Telegram WebApp
@@ -72,11 +74,11 @@ function App() {
       <TooltipProvider>
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
           <Toaster />
-          {isProcessingInvite ? (
+          {isProcessingReferral ? (
             <div className="min-h-screen flex items-center justify-center">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-gray-600 dark:text-gray-400">Обрабатываем приглашение...</p>
+                <p className="text-gray-600 dark:text-gray-400">Обрабатываем реферальную ссылку...</p>
               </div>
             </div>
           ) : (

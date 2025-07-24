@@ -8,6 +8,7 @@ import { telegramService } from "@/lib/telegram";
 import { UserProfile, PartnerProfile } from "@/types/models";
 import { usePartnerSync } from "@/hooks/use-partner-sync";
 import { usePartnerStatus } from "@/hooks/use-partner-status";
+import { useReferralProcessing } from "@/hooks/use-referral-processing";
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
@@ -17,6 +18,9 @@ export default function Home() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [, navigate] = useLocation();
+
+  // Реферальная система - обработка входящих реферальных ссылок
+  const { isProcessing: referralProcessing, referralProcessed } = useReferralProcessing();
 
   // Use both local sync and server status for comprehensive partner management
   const { partner: syncedPartner, isLoading: partnerLoading, refreshPartner } = usePartnerSync(user?.id ? parseInt(user.id) : 0);

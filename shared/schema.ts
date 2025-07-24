@@ -10,7 +10,25 @@ export const users = pgTable("users", {
   avatar: text("avatar"),
 });
 
-// Partner table
+// Referral codes table - каждый пользователь имеет уникальный реферальный код
+export const referralCodes = pgTable("referral_codes", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().unique(), // Telegram ID пользователя
+  referralCode: text("referral_code").notNull().unique(), // Уникальный реферальный код
+  createdAt: text("created_at").notNull(),
+});
+
+// Referral connections table - связи между пользователями через реферальные коды
+export const referralConnections = pgTable("referral_connections", {
+  id: serial("id").primaryKey(),
+  referrerId: text("referrer_id").notNull(), // Telegram ID того, кто пригласил
+  referredId: text("referred_id").notNull(), // Telegram ID того, кто перешел по ссылке
+  referralCode: text("referral_code").notNull(), // Использованный реферальный код
+  connectedAt: text("connected_at").notNull(),
+  status: text("status").notNull().default("pending"), // pending, active, inactive
+});
+
+// Partner table - обновленная таблица партнеров
 export const partners = pgTable("partners", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
@@ -18,8 +36,8 @@ export const partners = pgTable("partners", {
   partnerName: text("partner_name").notNull(),
   partnerAvatar: text("partner_avatar"),
   connectedAt: text("connected_at").notNull(),
-  status: text("status").notNull().default("pending"), // pending, connected, confirmed
-  inviterUserId: text("inviter_user_id"), // Who initiated the connection
+  status: text("status").notNull().default("connected"), // connected, disconnected
+  referralConnectionId: integer("referral_connection_id"), // Ссылка на реферальную связь
 });
 
 // Game sessions table
@@ -57,6 +75,20 @@ export const insertUserSchema = createInsertSchema(users).pick({
   avatar: true,
 });
 
+export const insertReferralCodeSchema = createInsertSchema(referralCodes).pick({
+  userId: true,
+  referralCode: true,
+  createdAt: true,
+});
+
+export const insertReferralConnectionSchema = createInsertSchema(referralConnections).pick({
+  referrerId: true,
+  referredId: true,
+  referralCode: true,
+  connectedAt: true,
+  status: true,
+});
+
 export const insertPartnerSchema = createInsertSchema(partners).pick({
   userId: true,
   partnerTelegramId: true,
@@ -64,7 +96,7 @@ export const insertPartnerSchema = createInsertSchema(partners).pick({
   partnerAvatar: true,
   connectedAt: true,
   status: true,
-  inviterUserId: true,
+  referralConnectionId: true,
 });
 
 export const insertGameSessionSchema = createInsertSchema(gameSessions).pick({
@@ -92,6 +124,13 @@ export const insertAchievementSchema = createInsertSchema(achievements).pick({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+export type InsertReferralCode = z.infer<typeof insertReferralCodeSchema>;
+export type ReferralCode = typeof referralCodes.$inferSelect;
+
+export type InsertReferralConnection = z.infer<typeof insertReferralConnectionSchema>;
+export type ReferralConnection = typeof referralConnections.$inferSelect;
+
 export type InsertPartner = z.infer<typeof insertPartnerSchema>;
 export type Partner = typeof partners.$inferSelect;
 export type InsertGameSession = z.infer<typeof insertGameSessionSchema>;

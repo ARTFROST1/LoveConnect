@@ -47,7 +47,7 @@ class DuoLoveTelegramBot {
   private setupCommands() {
     if (!this.bot) return;
 
-    // Handle /start command with invite parameters
+    // Handle /start command - теперь только обычный запуск без сложной логики приглашений
     this.bot.onText(/\/start(?:\s+(.+))?/, async (msg, match) => {
       const chatId = msg.chat.id;
       const user = msg.from;
@@ -60,11 +60,8 @@ class DuoLoveTelegramBot {
         startParam
       });
 
-      if (startParam && startParam.startsWith('invite_')) {
-        await this.handleInviteLink(chatId, user, startParam);
-      } else {
-        await this.handleRegularStart(chatId, user);
-      }
+      // Всегда используем обычный запуск - реферальная система работает через веб-интерфейс
+      await this.handleRegularStart(chatId, user);
     });
 
     // Handle errors
@@ -78,55 +75,7 @@ class DuoLoveTelegramBot {
     });
   }
 
-  private async handleInviteLink(chatId: number, user: any, startParam: string) {
-    if (!this.bot) return;
-
-    const inviterUserId = startParam.replace('invite_', '');
-    
-    console.log('Processing invite link:', {
-      inviterUserId,
-      inviteeUserId: user?.id,
-      inviteeUsername: user?.username
-    });
-
-    try {
-      // For Telegram WebApp, we need to use the proper method to pass start parameters
-      // In development mode, use URL parameter; in production, use WebApp's built-in mechanism
-      let webAppUrlWithParam;
-      if (this.isDevelopment) {
-        // In development, use direct URL parameters that our app can read
-        webAppUrlWithParam = `${this.webAppUrl}?start=${startParam}&testUserId=${parseInt(inviterUserId) + 1}`;
-      } else {
-        // In production, let Telegram handle the start parameter properly
-        webAppUrlWithParam = this.webAppUrl;
-      }
-      
-      const keyboard = {
-        inline_keyboard: [[
-          {
-            text: '🎮 Открыть DuoLove',
-            web_app: { url: webAppUrlWithParam }
-          }
-        ]]
-      };
-
-      await this.bot.sendMessage(chatId, 
-        `🎉 Вас пригласили играть в DuoLove!\n\n` +
-        `Откройте приложение, чтобы подключиться к партнёру и начать играть в мини-игры вместе.\n\n` +
-        `После подключения ваш партнёр получит уведомление о том, что вы приняли приглашение.${this.isDevelopment ? `\n\n<i>URL: ${webAppUrlWithParam}</i>` : ''}`,
-        {
-          reply_markup: keyboard,
-          parse_mode: 'HTML'
-        }
-      );
-
-    } catch (error) {
-      console.error('Error handling invite link:', error);
-      await this.bot.sendMessage(chatId, 
-        'Произошла ошибка при обработке приглашения. Попробуйте позже.'
-      );
-    }
-  }
+  // Удаляем старый метод handleInviteLink - больше не нужен
 
   private async handleRegularStart(chatId: number, user: any) {
     if (!this.bot) return;
@@ -212,19 +161,17 @@ class DuoLoveTelegramBot {
     }
   }
 
-  // Method to generate invite link using startapp parameter (as per Telegram WebApp specification)
-  async generateInviteLink(userId: string): Promise<string> {
+  // Method to generate referral link (no longer uses Telegram bot)
+  async generateReferralLink(userId: string): Promise<string> {
     try {
-      // Get bot info to get the actual username
-      const botInfo = await this.getBotInfo();
-      const botUsername = botInfo?.username || 'duolove_bot';
-      
-      // Use the new startapp parameter format for Telegram WebApp
-      return `https://t.me/${botUsername}/app?startapp=invite_${userId}`;
+      // Генерируем реферальную ссылку напрямую через веб-приложение
+      const baseUrl = this.webAppUrl;
+      const referralCode = `ref_${userId}_${Date.now().toString(36)}`;
+      return `${baseUrl}?ref=${referralCode}`;
     } catch (error) {
-      console.error('Error generating invite link:', error);
-      // Fallback - use the default bot username with startapp parameter
-      return `https://t.me/duolove_bot/app?startapp=invite_${userId}`;
+      console.error('Error generating referral link:', error);
+      // Fallback
+      return `${this.webAppUrl}?ref=ref_${userId}_${Date.now().toString(36)}`;
     }
   }
 
