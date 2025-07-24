@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, Play, RefreshCw, Sparkles, Target, Clock, Star, Brain, Zap, Gift } from "lucide-react";
@@ -15,6 +15,7 @@ import 'swiper/css/pagination';
 export default function Home() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [, navigate] = useLocation();
 
   // Use the partner sync hook for real-time updates
   const { partner: syncedPartner, isLoading: partnerLoading, refreshPartner } = usePartnerSync(user?.id ? parseInt(user.id) : 0);
@@ -88,6 +89,18 @@ export default function Home() {
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - connectedDate.getTime());
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  const handleUserAvatarClick = () => {
+    telegramService.hapticFeedback('selection');
+    navigate('/profile');
+  };
+
+  const handlePartnerAvatarClick = () => {
+    if (partner) {
+      telegramService.hapticFeedback('selection');
+      navigate(`/profile?partnerId=${partner.telegramId}`);
+    }
   };
 
   // Carousel suggestions data
@@ -194,7 +207,10 @@ export default function Home() {
             <div className="flex items-center space-x-4 mb-4">
               {/* User Avatar */}
               <div className="relative">
-                <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center border-2 border-primary">
+                <div 
+                  className="w-12 h-12 bg-primary rounded-full flex items-center justify-center border-2 border-primary cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={handleUserAvatarClick}
+                >
                   {user?.avatar ? (
                     <img src={user.avatar} alt="User" className="w-full h-full rounded-full object-cover" />
                   ) : (
@@ -211,7 +227,10 @@ export default function Home() {
               
               {/* Partner Avatar */}
               <div className="relative">
-                <div className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center border-2 border-secondary">
+                <div 
+                  className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center border-2 border-secondary cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={handlePartnerAvatarClick}
+                >
                   {partner?.avatar ? (
                     <img src={partner.avatar} alt="Partner" className="w-full h-full rounded-full object-cover" />
                   ) : (

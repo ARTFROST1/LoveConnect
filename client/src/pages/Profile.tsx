@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,7 +20,8 @@ import {
   Award,
   TrendingUp,
   Camera,
-  Users
+  Users,
+  ArrowLeft
 } from "lucide-react";
 import { database } from "@/lib/database";
 import { telegramService } from "@/lib/telegram";
@@ -59,7 +61,9 @@ interface UserStats {
 }
 
 export default function Profile() {
+  const [location, navigate] = useLocation();
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [partnerData, setPartnerData] = useState<PartnerProfile | null>(null);
   const [gameHistory, setGameHistory] = useState<GameHistoryItem[]>([]);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [stats, setStats] = useState<UserStats>({
@@ -73,6 +77,11 @@ export default function Profile() {
     maxScore: 0
   });
   const [loading, setLoading] = useState(true);
+
+  // Check if we're viewing a partner's profile
+  const urlParams = new URLSearchParams(location.split('?')[1] || '');
+  const partnerId = urlParams.get('partnerId');
+  const isViewingPartner = Boolean(partnerId);
 
   // Use the partner sync hook for real-time updates
   const { partner: syncedPartner, isLoading: partnerLoading } = usePartnerSync(user?.id ? parseInt(user.id) : 0);
@@ -88,7 +97,7 @@ export default function Profile() {
 
   useEffect(() => {
     initializeProfile();
-  }, []);
+  }, [partnerId]);
 
   const initializeProfile = async () => {
     try {
@@ -132,6 +141,28 @@ export default function Profile() {
         telegramId: dbUser.telegram_id
       });
 
+      // If viewing partner profile, load partner data
+      if (isViewingPartner && partnerId) {
+        const partnerInfo = await database.getPartnerByTelegramId(partnerId);
+        if (partnerInfo) {
+          setPartnerData({
+            id: partnerInfo.id,
+            name: partnerInfo.partner_name,
+            avatar: partnerInfo.partner_avatar,
+            telegramId: partnerInfo.partner_telegram_id,
+            connectedAt: partnerInfo.connected_at
+          });
+        } else if (syncedPartner && syncedPartner.partner_telegram_id === partnerId) {
+          setPartnerData({
+            id: syncedPartner.id,
+            name: syncedPartner.partner_name,
+            avatar: syncedPartner.partner_avatar,
+            telegramId: syncedPartner.partner_telegram_id,
+            connectedAt: syncedPartner.connected_at
+          });
+        }
+      }
+
       // Load game history, achievements, and stats
       await Promise.all([
         loadGameHistory(),
@@ -149,7 +180,17 @@ export default function Profile() {
   const loadGameHistory = async () => {
     try {
       const history = await database.getAllGameSessions();
-      setGameHistory(history || []);
+      if (isViewingPartner) {
+        // Swap scores to show from partner's perspective
+        const partnerHistory = history?.map(session => ({
+          ...session,
+          user_score: session.partner_score,
+          partner_score: session.user_score
+        })) || [];
+        setGameHistory(partnerHistory);
+      } else {
+        setGameHistory(history || []);
+      }
     } catch (error) {
       console.error('Failed to load game history:', error);
       setGameHistory([]);
@@ -225,9 +266,12 @@ export default function Profile() {
       
       if (sessions && sessions.length > 0) {
         const gamesPlayed = sessions.length;
-        const totalScore = sessions.reduce((sum: number, session: any) => sum + (session.user_score || 0), 0);
+        
+        // Calculate stats from appropriate perspective
+        const scoreKey = isViewingPartner ? 'partner_score' : 'user_score';
+        const totalScore = sessions.reduce((sum: number, session: any) => sum + (session[scoreKey] || 0), 0);
         const averageScore = gamesPlayed > 0 ? Math.round(totalScore / gamesPlayed) : 0;
-        const maxScore = sessions.reduce((max: number, session: any) => Math.max(max, session.user_score || 0), 0);
+        const maxScore = sessions.reduce((max: number, session: any) => Math.max(max, session[scoreKey] || 0), 0);
         
         // Calculate total play time (mock calculation)
         const totalPlayTime = gamesPlayed * 5; // 5 minutes average per game
@@ -244,12 +288,12 @@ export default function Profile() {
 
         setStats({
           gamesPlayed,
-          achievements: userAchievements?.length || 0,
-          hearts: Math.floor(gamesPlayed * 2.5), // Mock hearts calculation
+          achievements: isViewingPartner ? 3 : (userAchievements?.length || 0), // Mock partner achievements
+          hearts: Math.floor(gamesPlayed * (isViewingPartner ? 2.8 : 2.5)), // Slightly different calculation for partner
           totalPlayTime,
           favoriteGame: getGameDisplayName(favoriteGame),
           averageScore,
-          streakDays: 3, // Mock streak
+          streakDays: isViewingPartner ? 5 : 3, // Mock different streaks
           maxScore
         });
       }
@@ -270,11 +314,33 @@ export default function Profile() {
   };
 
   const getDaysWithPartner = (): number => {
-    if (!partner) return 0;
-    const connectedDate = new Date(partner.connectedAt);
+    const relationshipData = isViewingPartner ? partnerData : partner;
+    if (!relationshipData) return 0;
+    const connectedDate = new Date(relationshipData.connectedAt);
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - connectedDate.getTime());
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  const handlePartnerClick = () => {
+    if (isViewingPartner) {
+      // Go back to own profile
+      telegramService.hapticFeedback('selection');
+      navigate('/profile');
+    } else if (partner) {
+      // Go to partner profile
+      telegramService.hapticFeedback('selection');
+      navigate(`/profile?partnerId=${partner.telegramId}`);
+    }
+  };
+
+  const handleGoBack = () => {
+    telegramService.hapticFeedback('selection');
+    if (isViewingPartner) {
+      navigate('/profile');
+    } else {
+      window.history.back();
+    }
   };
 
   const formatTimeAgo = (dateString: string): string => {
@@ -306,49 +372,79 @@ export default function Profile() {
     );
   }
 
+  // Determine the profile data to display
+  const displayProfile = isViewingPartner ? partnerData : user;
+  const relationshipPartner = isViewingPartner ? user : partner;
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
       <div className="max-w-md mx-auto">
+        {/* Header with Back Button (only for partner profile) */}
+        {isViewingPartner && (
+          <div className="bg-white dark:bg-gray-800 pt-4 pb-2 px-4 shadow-sm">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleGoBack}
+              className="mb-2"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Назад
+            </Button>
+          </div>
+        )}
+
         {/* Profile Header */}
-        <div className="bg-white dark:bg-gray-800 pt-8 pb-6 px-6 rounded-b-3xl shadow-sm">
-          {/* User Avatar and Info */}
+        <div className={`bg-white dark:bg-gray-800 pb-6 px-6 rounded-b-3xl shadow-sm ${isViewingPartner ? '' : 'pt-8'}`}>
+          {/* Profile Avatar and Info */}
           <div className="text-center mb-6">
             <div className="relative inline-block">
-              <Avatar 
-                className="w-24 h-24 mx-auto mb-4 cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={handleAvatarClick}
-              >
-                <AvatarImage src={user?.avatar || ""} alt={user?.name || ""} />
+              <Avatar className="w-24 h-24 mx-auto mb-4">
+                <AvatarImage src={displayProfile?.avatar || ""} alt={displayProfile?.name || ""} />
                 <AvatarFallback className="text-2xl bg-gradient-to-br from-primary/20 to-secondary/20">
-                  {user?.name?.[0]?.toUpperCase() || "?"}
+                  {displayProfile?.name?.[0]?.toUpperCase() || "?"}
                 </AvatarFallback>
               </Avatar>
-              <Button
-                size="sm"
-                className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0 bg-primary hover:bg-primary/90"
-                onClick={handleAvatarClick}
-              >
-                <Camera className="w-4 h-4" />
-              </Button>
+              {/* Only show camera button for own profile */}
+              {!isViewingPartner && (
+                <Button
+                  size="sm"
+                  className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0 bg-primary hover:bg-primary/90"
+                  onClick={handleAvatarClick}
+                >
+                  <Camera className="w-4 h-4" />
+                </Button>
+              )}
             </div>
             
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              {user?.name || "Пользователь"}
+              {displayProfile?.name || (isViewingPartner ? "Партнёр" : "Пользователь")}
             </h1>
             
-            {/* Partner Info */}
-            {partner ? (
+            {/* Online status for partner */}
+            {isViewingPartner && (
+              <div className="flex items-center justify-center space-x-2 mb-4">
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                <span className="text-sm text-gray-500 dark:text-gray-400">Онлайн</span>
+              </div>
+            )}
+            
+            {/* Relationship Info */}
+            {relationshipPartner ? (
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mx-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Партнёр</p>
-                <div className="flex items-center justify-center space-x-3">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">В отношениях с</p>
+                <div 
+                  className="flex items-center justify-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={handlePartnerClick}
+                >
                   <Avatar className="w-8 h-8">
-                    <AvatarImage src={partner.avatar || ""} alt={partner.name} />
+                    <AvatarImage src={relationshipPartner.avatar || ""} alt={relationshipPartner.name} />
                     <AvatarFallback className="text-xs">
-                      {partner.name?.[0]?.toUpperCase() || "?"}
+                      {relationshipPartner.name?.[0]?.toUpperCase() || "?"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="text-center">
-                    <p className="font-semibold text-gray-900 dark:text-white">{partner.name}</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">{relationshipPartner.name}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {getDaysWithPartner()} дней вместе
                     </p>
@@ -357,7 +453,7 @@ export default function Profile() {
               </div>
             ) : (
               <p className="text-gray-500 dark:text-gray-400 text-sm">
-                Партнёр не добавлен
+                {isViewingPartner ? "Данные недоступны" : "Партнёр не добавлен"}
               </p>
             )}
           </div>
