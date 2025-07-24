@@ -15,6 +15,12 @@ export function usePartnerSync(userId: number): PartnerSyncResult {
   const { toast } = useToast();
 
   const refreshPartner = useCallback(async () => {
+    if (userId === 0) {
+      setPartner(null);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       
@@ -22,51 +28,54 @@ export function usePartnerSync(userId: number): PartnerSyncResult {
       const dbPartner = await database.getPartner(userId);
       console.log('Partner data from local DB:', dbPartner);
       
-      // Если в локальной базе нет партнера, проверяем сервер
-      if (!dbPartner) {
-        try {
-          const response = await fetch(`/api/partner/status/${userId}`);
-          if (response.ok) {
-            const serverData = await response.json();
-            console.log('Partner data from server:', serverData);
-            
-            if (serverData.partnership) {
-              // Синхронизируем данные с сервера в локальную базу
-              const partnerInfo = {
-                userId: userId,
-                partnerTelegramId: serverData.partnership.partnerId,
-                partnerName: serverData.partnership.partnerName,
-                partnerAvatar: null,
-                connectedAt: serverData.partnership.connectedAt,
-                status: serverData.partnership.status || 'connected'
-              };
-              
-              console.log('Syncing partner data to local DB:', partnerInfo);
-              
-              await database.addPartner(
-                partnerInfo.userId,
-                partnerInfo.partnerTelegramId,
-                partnerInfo.partnerName,
-                partnerInfo.partnerAvatar,
-                partnerInfo.connectedAt,
-                partnerInfo.status
-              );
-              
-              // Получаем обновленные данные из локальной базы
-              const updatedPartner = await database.getPartner(userId);
-              setPartner(updatedPartner);
-            } else {
-              setPartner(null);
-            }
-          } else {
-            setPartner(dbPartner);
-          }
-        } catch (serverError) {
-          console.error('Error fetching from server:', serverError);
-          setPartner(dbPartner);
-        }
-      } else {
+      // Если в локальной базе есть партнер, используем его и не делаем лишних запросов
+      if (dbPartner && dbPartner.id && dbPartner.partner_name && dbPartner.partner_telegram_id) {
         setPartner(dbPartner);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Только если в локальной базе нет данных, проверяем сервер
+      try {
+        const response = await fetch(`/api/partner/status/${userId}`);
+        if (response.ok) {
+          const serverData = await response.json();
+          console.log('Partner data from server:', serverData);
+          
+          if (serverData.partnership) {
+            // Синхронизируем данные с сервера в локальную базу
+            const partnerInfo = {
+              userId: userId,
+              partnerTelegramId: serverData.partnership.partnerId,
+              partnerName: serverData.partnership.partnerName,
+              partnerAvatar: null,
+              connectedAt: serverData.partnership.connectedAt,
+              status: serverData.partnership.status || 'connected'
+            };
+            
+            console.log('Syncing partner data to local DB:', partnerInfo);
+            
+            await database.addPartner(
+              partnerInfo.userId,
+              partnerInfo.partnerTelegramId,
+              partnerInfo.partnerName,
+              partnerInfo.partnerAvatar,
+              partnerInfo.connectedAt,
+              partnerInfo.status
+            );
+            
+            // Получаем обновленные данные из локальной базы
+            const updatedPartner = await database.getPartner(userId);
+            setPartner(updatedPartner);
+          } else {
+            setPartner(null);
+          }
+        } else {
+          setPartner(null);
+        }
+      } catch (serverError) {
+        console.error('Error fetching from server:', serverError);
+        setPartner(null);
       }
     } catch (error) {
       console.error('Error refreshing partner:', error);

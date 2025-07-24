@@ -34,6 +34,9 @@ function AppContent() {
   const [userLoaded, setUserLoaded] = useState(false);
   const [location] = useLocation();
 
+  // Process referral links automatically when app starts
+  const { isProcessing: isProcessingReferral } = useReferralProcessing();
+
   // Get user data
   useEffect(() => {
     const initializeUser = async () => {
@@ -60,13 +63,19 @@ function AppContent() {
     syncedPartner && syncedPartner.id && syncedPartner.partner_name && syncedPartner.partner_telegram_id
   );
 
-  // Show welcome screen only on home route when no partner exists and data is loaded
-  const shouldShowWelcome = userLoaded && location === '/' && !hasPartner && !partnerLoading;
+  // Show welcome screen only when:
+  // 1. User data is loaded
+  // 2. On home route
+  // 3. No partner exists
+  // 4. Not currently loading partner data
+  // 5. Not processing referral links (important!)
+  const shouldShowWelcome = userLoaded && location === '/' && !hasPartner && !partnerLoading && !isProcessingReferral;
 
-  // Show navigation only when user has a partner or on non-home routes
-  const shouldShowNavigation = hasPartner || (location !== '/' && !shouldShowWelcome);
+  // Show navigation only when user has a partner
+  const shouldShowNavigation = hasPartner;
 
-  if (!userLoaded) {
+  // Show loading when user data or partner data is still loading, or when processing referral
+  if (!userLoaded || partnerLoading || isProcessingReferral) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -105,9 +114,6 @@ function AppContent() {
 }
 
 function App() {
-  // Process referral links automatically when app starts
-  const { isProcessing: isProcessingReferral } = useReferralProcessing();
-
   useEffect(() => {
     // Initialize Telegram WebApp
     if (telegramService.isAvailable) {
