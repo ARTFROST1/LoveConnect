@@ -7,9 +7,9 @@ class DuoLoveTelegramBot {
 
   constructor() {
     this.isDevelopment = process.env.NODE_ENV === 'development';
-    // Use the working Replit dev URL
+    // Use the new working Replit dev URL
     this.webAppUrl = process.env.WEBAPP_URL || 
-      'https://93828f49-b7a4-4135-ba2e-9d9278d7ea0d-00-11q6gmkwtm0pq.riker.replit.dev';
+      'https://a14f2b3f-23b7-4c7f-9880-b16a8d739822-00-3bbojmz63mcbx.spock.replit.dev';
     
     console.log('Telegram Bot: Initializing...');
     console.log('Environment:', this.isDevelopment ? 'development' : 'production');
