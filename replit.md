@@ -31,6 +31,10 @@ Preferred communication style: Simple, everyday language.
 - Enhanced API endpoints (/api/referral/generate, /api/referral/connect, /api/referral/stats)
 - Updated page AddPartnerNew.tsx with modern referral UI
 - Comprehensive test page at `/referral-test` for validation
+- Proper Telegram WebApp link generation: `https://t.me/duolove_bot/DuoLove?startapp={referral_code}`
+- Updated WebApp URL to current Replit instance: `https://2ddadfc3-f56c-4b19-a5aa-ddd67f22451d-00-47fz0qodhmtt.kirk.replit.dev`
+- Telegram bot integration: `@duolove_bot` with WebApp name `DuoLove`
+- Startapp parameter processing in use-referral-processing hook
 - Backward compatibility with existing partner management system
 
 ## System Architecture

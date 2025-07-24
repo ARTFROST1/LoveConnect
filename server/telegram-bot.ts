@@ -9,7 +9,7 @@ class DuoLoveTelegramBot {
     this.isDevelopment = process.env.NODE_ENV === 'development';
     // Use the new working Replit dev URL
     this.webAppUrl = process.env.WEBAPP_URL || 
-      'https://a14f2b3f-23b7-4c7f-9880-b16a8d739822-00-3bbojmz63mcbx.spock.replit.dev';
+      'https://2ddadfc3-f56c-4b19-a5aa-ddd67f22451d-00-47fz0qodhmtt.kirk.replit.dev';
     
     console.log('Telegram Bot: Initializing...');
     console.log('Environment:', this.isDevelopment ? 'development' : 'production');
@@ -161,17 +161,17 @@ class DuoLoveTelegramBot {
     }
   }
 
-  // Method to generate referral link (no longer uses Telegram bot)
+  // Method to generate referral link using proper Telegram WebApp format
   async generateReferralLink(userId: string): Promise<string> {
     try {
-      // Генерируем реферальную ссылку напрямую через веб-приложение
-      const baseUrl = this.webAppUrl;
+      // Генерируем правильную Telegram WebApp ссылку
       const referralCode = `ref_${userId}_${Date.now().toString(36)}`;
-      return `${baseUrl}?ref=${referralCode}`;
+      return `https://t.me/duolove_bot/DuoLove?startapp=${referralCode}`;
     } catch (error) {
       console.error('Error generating referral link:', error);
       // Fallback
-      return `${this.webAppUrl}?ref=ref_${userId}_${Date.now().toString(36)}`;
+      const referralCode = `ref_${userId}_${Date.now().toString(36)}`;
+      return `https://t.me/duolove_bot/DuoLove?startapp=${referralCode}`;
     }
   }
 

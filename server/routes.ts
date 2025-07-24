@@ -31,10 +31,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Создаем полную ссылку
-      const baseUrl = process.env.WEBAPP_URL || 
-        'https://a14f2b3f-23b7-4c7f-9880-b16a8d739822-00-3bbojmz63mcbx.spock.replit.dev';
-      const referralLink = `${baseUrl}?ref=${referralCode.referralCode}`;
+      // Создаем правильную Telegram WebApp ссылку
+      const referralLink = `https://t.me/duolove_bot/DuoLove?startapp=${referralCode.referralCode}`;
       
       res.json({ 
         referralCode: referralCode.referralCode,

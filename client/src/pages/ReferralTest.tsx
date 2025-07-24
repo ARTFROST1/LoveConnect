@@ -100,7 +100,8 @@ export default function ReferralTest() {
             Тест реферальной системы
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Проверка функциональности новой реферальной системы
+            Проверка функциональности новой реферальной системы<br/>
+            <span className="text-sm">Теперь генерирует правильные Telegram WebApp ссылки!</span>
           </p>
         </div>
 
@@ -129,9 +130,13 @@ export default function ReferralTest() {
                 </div>
                 
                 {referralCode && (
-                  <div className="text-center">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Код: <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{referralCode}</span>
+                  <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg">
+                    <p className="text-sm text-blue-800 dark:text-blue-200 text-center">
+                      <strong>Реферальный код:</strong><br/>
+                      <span className="font-mono bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded">{referralCode}</span>
+                    </p>
+                    <p className="text-xs text-blue-600 dark:text-blue-300 mt-2 text-center">
+                      Эта ссылка откроется прямо в Telegram WebApp
                     </p>
                   </div>
                 )}
@@ -159,13 +164,16 @@ export default function ReferralTest() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="referralCode">Реферальный код</Label>
+                <Label htmlFor="referralCode">Реферальный код для тестирования</Label>
                 <Input
                   id="referralCode"
                   value={testReferralCode}
                   onChange={(e) => setTestReferralCode(e.target.value)}
                   placeholder="ref_803210627_xxx"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Скопируйте код из вашей реферальной ссылки выше
+                </p>
               </div>
               <div>
                 <Label htmlFor="testUserId">ID тестового пользователя</Label>
