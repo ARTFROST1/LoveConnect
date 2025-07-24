@@ -14,7 +14,7 @@ interface PartnerProfileProps {
   onDisconnect?: () => void;
 }
 
-export default function PartnerProfile({ 
+export default function PartnerProfileModal({ 
   partner, 
   isOpen, 
   onClose, 
@@ -73,7 +73,7 @@ export default function PartnerProfile({
                     />
                   ) : (
                     <span className="text-white font-bold text-2xl">
-                      {partner.name.charAt(0)}
+                      {partner.name?.charAt(0) || 'P'}
                     </span>
                   )}
                 </div>
@@ -82,7 +82,7 @@ export default function PartnerProfile({
                 </div>
               </div>
               <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-                {partner.name}
+                {partner.name || 'Партнёр'}
               </h3>
               <Badge 
                 className={`${connectionLevel.color} text-white border-none mt-2`}
@@ -169,7 +169,7 @@ export default function PartnerProfile({
           
           <div className="text-center space-y-4">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Вы уверены, что хотите разорвать связь с {partner.name}? 
+              Вы уверены, что хотите разорвать связь с {partner.name || 'партнёром'}? 
               Это действие нельзя отменить.
             </p>
             
