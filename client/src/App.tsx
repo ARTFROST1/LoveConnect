@@ -33,6 +33,7 @@ function Router() {
         <Route path="/game/:gameId" component={GameRoom} />
         <Route path="/history" component={History} />
         <Route path="/profile" component={Profile} />
+        <Route path="/profile/:partnerId" component={Profile} />
         <Route path="/test" component={TestPage} />
         <Route path="/test-invite" component={TestInvite} />
         <Route path="/partner-test" component={PartnerTest} />

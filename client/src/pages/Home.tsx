@@ -11,6 +11,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
+import UserCard from "@/components/UserCard";
 
 export default function Home() {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -99,7 +100,7 @@ export default function Home() {
   const handlePartnerAvatarClick = () => {
     if (partner) {
       telegramService.hapticFeedback('selection');
-      navigate(`/profile?partnerId=${partner.telegramId}`);
+      navigate(`/profile/${partner.telegramId}`);
     }
   };
 
@@ -204,41 +205,33 @@ export default function Home() {
       <div className="p-4">
         <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-none shadow-sm">
           <CardContent className="p-6">
-            <div className="flex items-center space-x-4 mb-4">
-              {/* User Avatar */}
-              <div className="relative">
-                <div 
-                  className="w-12 h-12 bg-primary rounded-full flex items-center justify-center border-2 border-primary cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={handleUserAvatarClick}
-                >
-                  {user?.avatar ? (
-                    <img src={user.avatar} alt="User" className="w-full h-full rounded-full object-cover" />
-                  ) : (
-                    <span className="text-white font-semibold">{user?.name?.charAt(0) || 'U'}</span>
-                  )}
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>
-              </div>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              {/* User Profile Card */}
+              <UserCard
+                user={user}
+                onClick={handleUserAvatarClick}
+                showOnlineStatus={true}
+                isOnline={true}
+                relationshipText="Вы"
+                variant="clickable"
+                className="bg-white/50 dark:bg-gray-800/50 hover:bg-white/80 dark:hover:bg-gray-800/80 border border-primary/20"
+              />
               
-              {/* Heart Connection */}
-              <div className="flex-1 flex items-center justify-center">
-                <Heart className="w-6 h-6 text-primary animate-pulse" fill="currentColor" />
-              </div>
-              
-              {/* Partner Avatar */}
-              <div className="relative">
-                <div 
-                  className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center border-2 border-secondary cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={handlePartnerAvatarClick}
-                >
-                  {partner?.avatar ? (
-                    <img src={partner.avatar} alt="Partner" className="w-full h-full rounded-full object-cover" />
-                  ) : (
-                    <span className="text-white font-semibold">{partner?.name?.charAt(0) || 'P'}</span>
-                  )}
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>
-              </div>
+              {/* Partner Profile Card */}
+              <UserCard
+                user={partner}
+                onClick={handlePartnerAvatarClick}
+                showOnlineStatus={true}
+                isOnline={true}
+                relationshipText="Партнёр"
+                variant="clickable"
+                className="bg-white/50 dark:bg-gray-800/50 hover:bg-white/80 dark:hover:bg-gray-800/80 border border-secondary/20"
+              />
+            </div>
+            
+            {/* Heart Connection */}
+            <div className="flex items-center justify-center mb-4">
+              <Heart className="w-8 h-8 text-primary animate-pulse" fill="currentColor" />
             </div>
             
             <div className="text-center">
