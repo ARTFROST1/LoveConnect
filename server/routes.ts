@@ -80,7 +80,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'active'
       });
 
-      // Создаем партнерство в старой системе для совместимости
+      // Создаем двустороннее партнерство для обеих сторон
       await storage.createPartnership(codeData.userId, userId, userName);
 
       // Отправляем уведомление в Telegram
@@ -96,7 +96,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         partnership: {
           connectionId: connection.id,
           referrerId: codeData.userId,
-          referrerName: `Пользователь ${codeData.userId}` // В реальном проекте нужно получать имя из базы
+          referrerName: `Пользователь ${codeData.userId}`,
+          referredId: userId,
+          referredName: userName
         }
       });
     } catch (error) {

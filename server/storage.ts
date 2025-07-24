@@ -87,7 +87,8 @@ export class MemStorage implements IStorage {
   }
 
   async getReferralCodeByCode(code: string): Promise<ReferralCode | null> {
-    for (const referralCode of this.referralCodes.values()) {
+    const codes = Array.from(this.referralCodes.values());
+    for (const referralCode of codes) {
       if (referralCode.referralCode === code) {
         return referralCode;
       }
@@ -99,7 +100,8 @@ export class MemStorage implements IStorage {
     const id = this.currentConnectionId++;
     const connection: ReferralConnection = {
       id,
-      ...data
+      ...data,
+      status: data.status || 'pending'
     };
     
     // Сохраняем связь
@@ -122,16 +124,26 @@ export class MemStorage implements IStorage {
   }
 
   async createPartnership(inviterUserId: string, inviteeUserId: string, inviteeName: string): Promise<void> {
-    const partnership = {
-      inviterUserId,
-      inviteeUserId,
-      inviteeName,
-      createdAt: new Date().toISOString()
-    };
+    const createdAt = new Date().toISOString();
     
     // Create bidirectional partnership
-    this.partnerships.set(inviterUserId, { ...partnership, partnerId: inviteeUserId, partnerName: inviteeName });
-    this.partnerships.set(inviteeUserId, { ...partnership, partnerId: inviterUserId, partnerName: `User ${inviterUserId}` });
+    // Для пригласившего - создаем связь с приглашенным
+    this.partnerships.set(inviterUserId, { 
+      partnerId: inviteeUserId, 
+      partnerName: inviteeName,
+      connectedAt: createdAt,
+      status: 'connected'
+    });
+    
+    // Для приглашенного - создаем связь с пригласившим
+    this.partnerships.set(inviteeUserId, { 
+      partnerId: inviterUserId, 
+      partnerName: `Пользователь ${inviterUserId}`,
+      connectedAt: createdAt,
+      status: 'connected'
+    });
+    
+    console.log(`Partnership created: ${inviterUserId} <-> ${inviteeUserId}`);
   }
 
   async getPartnership(userId: string): Promise<any | null> {

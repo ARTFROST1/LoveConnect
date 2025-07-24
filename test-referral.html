@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест реферальной ссылки</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Тест реферальной системы</h1>
+        
+        <h3>1. Генерация реферальной ссылки</h3>
+        <input type="text" id="userId1" placeholder="Введите Telegram ID пользователя 1" value="282569405">
+        <button class="btn" onclick="generateReferralCode()">Сгенерировать код</button>
+        <div id="referralResult" class="result"></div>
+        
+        <h3>2. Подключение по реферальной ссылке</h3>
+        <input type="text" id="userId2" placeholder="Введите Telegram ID пользователя 2" value="125166347">
+        <input type="text" id="userName2" placeholder="Введите имя пользователя 2" value="Тестовый пользователь">
+        <input type="text" id="referralCode" placeholder="Реферальный код из шага 1">
+        <button class="btn" onclick="connectViaReferral()">Подключиться</button>
+        <div id="connectResult" class="result"></div>
+        
+        <h3>3. Проверка статуса партнера</h3>
+        <button class="btn" onclick="checkPartnerStatus('282569405')">Проверить статус пользователя 1</button>
+        <button class="btn" onclick="checkPartnerStatus('125166347')">Проверить статус пользователя 2</button>
+        <div id="statusResult" class="result"></div>
+        
+        <h3>4. Прямая ссылка для тестирования</h3>
+        <div id="directLink" class="result"></div>
+    </div>
+
+    <script>
+        let currentReferralCode = '';
+        
+        async function generateReferralCode() {
+            const userId = document.getElementById('userId1').value;
+            const resultDiv = document.getElementById('referralResult');
+            
+            try {
+                const response = await fetch('/api/referral/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ userId }),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentReferralCode = data.referralCode;
+                    document.getElementById('referralCode').value = currentReferralCode;
+                    
+                    resultDiv.innerHTML = `
+                        <strong>✅ Успешно сгенерирован!</strong><br>
+                        <strong>Код:</strong> ${data.referralCode}<br>
+                        <strong>Ссылка:</strong> ${data.referralLink}<br>
+                    `;
+                    
+                    // Обновляем прямую ссылку для тестирования
+                    const testLink = `${window.location.origin}/?ref=${data.referralCode}`;
+                    document.getElementById('directLink').innerHTML = `
+                        <strong>Прямая ссылка для тестирования:</strong><br>
+                        <a href="${testLink}" target="_blank">${testLink}</a>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<strong>❌ Ошибка:</strong> ${data.error}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>❌ Ошибка сети:</strong> ${error.message}`;
+            }
+        }
+        
+        async function connectViaReferral() {
+            const userId = document.getElementById('userId2').value;
+            const userName = document.getElementById('userName2').value;
+            const referralCode = document.getElementById('referralCode').value;
+            const resultDiv = document.getElementById('connectResult');
+            
+            try {
+                const response = await fetch('/api/referral/connect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        referralCode, 
+                        userId, 
+                        userName 
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <strong>✅ Подключение успешно!</strong><br>
+                        <strong>ID соединения:</strong> ${data.partnership.connectionId}<br>
+                        <strong>Реферер:</strong> ${data.partnership.referrerId}<br>
+                        <strong>Приглашенный:</strong> ${data.partnership.referredId}<br>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<strong>❌ Ошибка:</strong> ${data.error}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>❌ Ошибка сети:</strong> ${error.message}`;
+            }
+        }
+        
+        async function checkPartnerStatus(userId) {
+            const resultDiv = document.getElementById('statusResult');
+            
+            try {
+                const response = await fetch(`/api/partner/status/${userId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const status = data.partnership ? 'Есть партнер' : 'Нет партнера';
+                    const partnerInfo = data.partnership ? 
+                        `<br><strong>Партнер:</strong> ${data.partnership.partnerName} (ID: ${data.partnership.partnerId})` : '';
+                    
+                    resultDiv.innerHTML = `
+                        <strong>Статус пользователя ${userId}:</strong> ${status}${partnerInfo}
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<strong>❌ Ошибка:</strong> ${data.error}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>❌ Ошибка сети:</strong> ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

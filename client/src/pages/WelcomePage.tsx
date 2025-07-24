@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
 
-export default function WelcomePage() {
+function WelcomePage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
       <Card className="w-full max-w-md">
@@ -25,3 +25,5 @@ export default function WelcomePage() {
     </div>
   );
 }
+
+export default WelcomePage;

@@ -100,12 +100,12 @@ export function useReferralProcessing(): ReferralProcessingResult {
         const result = await response.json();
         console.log('Referral processed successfully:', result);
 
-        // Создаем партнерство локально
+        // Создаем партнерство локально для текущего пользователя
         if (result.partnership) {
           console.log('Creating local partnership:', result.partnership);
           
           const newPartner = {
-            userId: 1,
+            userId: currentUser.id, // Используем реальный ID пользователя
             partnerTelegramId: result.partnership.referrerId,
             partnerName: result.partnership.referrerName || `Пользователь ${result.partnership.referrerId}`,
             partnerAvatar: null,
