@@ -7,6 +7,7 @@ import { database } from "@/lib/database";
 import { telegramService } from "@/lib/telegram";
 import { UserProfile, PartnerProfile } from "@/types/models";
 import { usePartnerSync } from "@/hooks/use-partner-sync";
+import { usePartnerStatus } from "@/hooks/use-partner-status";
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
@@ -17,11 +18,12 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [, navigate] = useLocation();
 
-  // Use the partner sync hook for real-time updates
+  // Use both local sync and server status for comprehensive partner management
   const { partner: syncedPartner, isLoading: partnerLoading, refreshPartner } = usePartnerSync(user?.id ? parseInt(user.id) : 0);
+  const { partnerStatus: serverPartnerStatus, refreshStatus: refreshServerStatus } = usePartnerStatus();
 
   // Convert synced partner to PartnerProfile format
-  // Check if syncedPartner is valid (not null and has required properties)
+  // Check both local database and server status for complete picture
   const partner: PartnerProfile | null = (syncedPartner && 
     syncedPartner.id && 
     syncedPartner.partner_name && 
@@ -31,7 +33,13 @@ export default function Home() {
     avatar: syncedPartner.partner_avatar,
     telegramId: syncedPartner.partner_telegram_id,
     connectedAt: syncedPartner.connected_at
-  } : null;
+  } : (serverPartnerStatus ? {
+    id: parseInt(serverPartnerStatus.partnerId) || 0,
+    name: serverPartnerStatus.partnerName,
+    avatar: null,
+    telegramId: serverPartnerStatus.partnerId,
+    connectedAt: serverPartnerStatus.createdAt
+  } : null);
 
   useEffect(() => {
     initializeUser();

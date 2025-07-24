@@ -44,7 +44,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Notify partner connection
+  // Notify partner connection and create bidirectional relationship
   app.post("/api/partner/notify", async (req, res) => {
     try {
       const { inviterUserId, inviteeUserId, inviteeName } = req.body;
@@ -53,15 +53,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Missing required parameters" });
       }
 
+      // Send Telegram notification to inviter
       await telegramBot.notifyPartnerConnection(inviterUserId, inviteeUserId, inviteeName);
+      
+      // Store bidirectional partnership in server storage for sync
+      await storage.createPartnership(inviterUserId, inviteeUserId, inviteeName);
       
       res.json({ 
         success: true,
-        message: "Partner notification sent" 
+        message: "Partner notification sent and partnership created" 
       });
     } catch (error) {
       console.error("Error notifying partner:", error);
       res.status(500).json({ error: "Failed to notify partner" });
+    }
+  });
+
+  // Get partnership status for polling
+  app.get("/api/partner/status/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "User ID is required" });
+      }
+
+      const partnership = await storage.getPartnership(userId);
+      
+      res.json({ 
+        partnership,
+        hasPartner: !!partnership 
+      });
+    } catch (error) {
+      console.error("Error getting partner status:", error);
+      res.status(500).json({ error: "Failed to get partner status" });
     }
   });
 

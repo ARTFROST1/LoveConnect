@@ -16,6 +16,7 @@ Preferred communication style: Simple, everyday language.
 **Solution**: Updated system to use correct working URL: `https://93828f49-b7a4-4135-ba2e-9d9278d7ea0d-00-11q6gmkwtm0pq.riker.replit.dev`
 
 **Date**: July 23, 2025 - Issue fixed by updating WebApp URL in system.
+**Date**: July 24, 2025 - Upgraded to use new working URL: `https://a14f2b3f-23b7-4c7f-9880-b16a8d739822-00-3bbojmz63mcbx.spock.replit.dev`
 
 ## System Architecture
 
@@ -96,8 +97,11 @@ Preferred communication style: Simple, everyday language.
 4. Results are stored upon completion with scoring data
 
 ### Data Synchronization
-- **Current**: All data stored locally per user
-- **Future Ready**: Database schema prepared for server-side synchronization
+- **Current**: Hybrid local + server synchronization system
+- **Local Storage**: SQLite for user data and immediate partner relationships  
+- **Server Storage**: MemStorage for bidirectional partnership synchronization
+- **Real-time Updates**: Dual-source partner status checking (local DB + server polling)
+- **Automatic Notifications**: Telegram bot notifications for partnership events
 
 ## External Dependencies
 

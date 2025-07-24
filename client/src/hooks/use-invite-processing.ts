@@ -90,7 +90,7 @@ export function useInviteProcessing(): InviteProcessingResult {
         inviterUserId // Track who invited
       );
 
-      // Step 2: Notify the inviter about the connection
+      // Step 2: Notify the inviter about the connection and create server-side partnership
       try {
         const response = await fetch('/api/partner/notify', {
           method: 'POST',
@@ -105,9 +105,9 @@ export function useInviteProcessing(): InviteProcessingResult {
         });
 
         if (response.ok) {
-          console.log('Partner notification sent successfully');
+          console.log('Partner notification sent and server partnership created successfully');
         } else {
-          console.error('Failed to send partner notification');
+          console.error('Failed to send partner notification or create server partnership');
         }
       } catch (error) {
         console.error('Error sending partner notification:', error);

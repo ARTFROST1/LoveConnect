@@ -90,13 +90,14 @@ class DuoLoveTelegramBot {
     });
 
     try {
-      // For Telegram WebApp, the start_param is automatically passed 
-      // when user clicks on the web_app button, no need to add it to URL
+      // Create WebApp URL with start parameter to ensure it's passed properly
+      const webAppUrlWithParam = `${this.webAppUrl}?start=${startParam}`;
+      
       const keyboard = {
         inline_keyboard: [[
           {
             text: '🎮 Открыть DuoLove',
-            web_app: { url: this.webAppUrl }
+            web_app: { url: webAppUrlWithParam }
           }
         ]]
       };

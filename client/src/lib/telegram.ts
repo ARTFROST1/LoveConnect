@@ -202,14 +202,47 @@ class TelegramService {
 
   // Get start param with retry logic for better reliability
   async getStartParamWithRetry(maxRetries: number = 3, delayMs: number = 500): Promise<string | null> {
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      const startParam = this.startParam;
-      if (startParam) {
-        return startParam;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      console.log(`Attempt ${attempt}: Checking for start_param`, {
+        hasTelegram: !!this.tg,
+        initDataUnsafe: this.tg?.initDataUnsafe || {},
+        urlParams: window.location.search
+      });
+
+      // Method 1: Check Telegram WebApp initDataUnsafe
+      if (this.tg?.initDataUnsafe?.start_param) {
+        console.log('Found start_param in initDataUnsafe:', this.tg.initDataUnsafe.start_param);
+        return this.tg.initDataUnsafe.start_param;
       }
-      
+
+      // Method 2: Check URL parameters (fallback)
+      const urlParams = new URLSearchParams(window.location.search);
+      const startFromUrl = urlParams.get('start');
+      if (startFromUrl) {
+        console.log('Found start param in URL:', startFromUrl);
+        return startFromUrl;
+      }
+
+      // Method 3: Check for invited_by parameter (alternative format)
+      const invitedBy = urlParams.get('invited_by');
+      if (invitedBy) {
+        console.log('Found invited_by param in URL:', invitedBy);
+        return `invite_${invitedBy}`;
+      }
+
+      // Method 4: Check fragment (hash) parameters as alternative
+      const hash = window.location.hash.substring(1);
+      if (hash) {
+        const hashParams = new URLSearchParams(hash);
+        const hashStart = hashParams.get('start');
+        if (hashStart) {
+          console.log('Found start param in hash:', hashStart);
+          return hashStart;
+        }
+      }
+
       // Wait before next attempt
-      if (attempt < maxRetries - 1) {
+      if (attempt < maxRetries) {
         await new Promise(resolve => setTimeout(resolve, delayMs));
         
         // Log current state for debugging
