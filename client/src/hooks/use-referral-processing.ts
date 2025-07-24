@@ -144,6 +144,9 @@ export function useReferralProcessing(): ReferralProcessingResult {
 
         setReferralProcessed(true);
         setIsProcessing(false);
+        
+        // Mark as processed in session storage to prevent re-processing
+        sessionStorage.setItem('referral_processed', 'true');
 
         // Убираем toast уведомления для улучшения UX
         // toast({
@@ -178,7 +181,13 @@ export function useReferralProcessing(): ReferralProcessingResult {
       }
     };
 
-    processReferralCode();
+    // Only process once per session
+    if (!sessionStorage.getItem('referral_processed')) {
+      processReferralCode();
+    } else {
+      setReferralProcessed(true);
+      setIsProcessing(false);
+    }
   }, []);
 
   return {

@@ -22,8 +22,6 @@ export function usePartnerSync(userId: number): PartnerSyncResult {
     }
 
     try {
-      setIsLoading(true);
-      
       // Получаем Telegram ID пользователя для API запроса
       const tgUser = telegramService.user;
       if (!tgUser) {
@@ -34,18 +32,22 @@ export function usePartnerSync(userId: number): PartnerSyncResult {
       }
       
       const telegramUserId = tgUser.id.toString();
-      console.log('Checking partnership for Telegram user ID:', telegramUserId);
       
       // Сначала проверяем локальную базу данных
       const dbPartner = await database.getPartner(userId);
-      console.log('Partner data from local DB:', dbPartner);
       
-      // Проверяем сервер для получения актуальных данных
+      // Если есть локальные данные о партнере, используем их
+      if (dbPartner && dbPartner.id && dbPartner.partner_name && dbPartner.partner_telegram_id) {
+        setPartner(dbPartner);
+        setIsLoading(false);
+        return; // Не делаем запрос на сервер, если партнер уже есть
+      }
+      
+      // Только если нет локального партнера, проверяем сервер
       try {
         const response = await fetch(`/api/partner/status/${telegramUserId}`);
         if (response.ok) {
           const serverData = await response.json();
-          console.log('Partner data from server:', serverData);
           
           if (serverData.partnership) {
             // Синхронизируем данные с сервера в локальную базу
@@ -58,10 +60,6 @@ export function usePartnerSync(userId: number): PartnerSyncResult {
               status: serverData.partnership.status || 'connected'
             };
             
-            console.log('Syncing partner data to local DB:', partnerInfo);
-            
-            // Удаляем старого партнера, если есть, и добавляем нового
-            await database.removePartner(userId);
             await database.addPartner(
               partnerInfo.userId,
               partnerInfo.partnerTelegramId,
@@ -75,26 +73,14 @@ export function usePartnerSync(userId: number): PartnerSyncResult {
             const updatedPartner = await database.getPartner(userId);
             setPartner(updatedPartner);
           } else {
-            // Если на сервере нет партнера, удаляем из локальной базы
-            await database.removePartner(userId);
             setPartner(null);
           }
-        } else {
-          // Если сервер недоступен, используем локальные данные
-          if (dbPartner && dbPartner.id && dbPartner.partner_name && dbPartner.partner_telegram_id) {
-            setPartner(dbPartner);
-          } else {
-            setPartner(null);
-          }
-        }
-      } catch (serverError) {
-        console.error('Error fetching from server:', serverError);
-        // Используем локальные данные как fallback
-        if (dbPartner && dbPartner.id && dbPartner.partner_name && dbPartner.partner_telegram_id) {
-          setPartner(dbPartner);
         } else {
           setPartner(null);
         }
+      } catch (serverError) {
+        console.error('Error fetching from server:', serverError);
+        setPartner(null);
       }
     } catch (error) {
       console.error('Error refreshing partner:', error);
@@ -108,11 +94,15 @@ export function usePartnerSync(userId: number): PartnerSyncResult {
   useEffect(() => {
     refreshPartner();
 
-    // Set up interval to check for partner updates every 15 seconds
+    // Only set up polling if user doesn't have a partner yet
     // This helps detect when the inviter accepts the connection
-    const interval = setInterval(() => {
-      refreshPartner();
-    }, 15000);
+    let interval: NodeJS.Timeout | null = null;
+    
+    if (!partner) {
+      interval = setInterval(() => {
+        refreshPartner();
+      }, 30000); // Увеличил интервал до 30 секунд для снижения нагрузки
+    }
 
     // Listen for visibility changes to refresh when app becomes active
     const handleVisibilityChange = () => {
@@ -124,10 +114,10 @@ export function usePartnerSync(userId: number): PartnerSyncResult {
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [refreshPartner]);
+  }, [refreshPartner, partner]); // Добавил partner в зависимости
 
   // Listen for window focus events as alternative to Telegram events
   useEffect(() => {

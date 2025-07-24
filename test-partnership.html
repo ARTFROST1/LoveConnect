@@ -3,30 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Partnership Display</title>
+    <title>Partnership System Status</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .partnership { background: #e8f5e8; }
+        .no-partner { background: #ffe8e8; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+    </style>
 </head>
 <body>
-    <h1>Partnership Test Links</h1>
-    <p>Click these links to test partnership display with correct user IDs:</p>
+    <h1>DuoLove - Partnership System Status</h1>
     
-    <h2>User 674146900 (should see partner 146775779)</h2>
-    <a href="/?testUserId=674146900" target="_blank">Test User 674146900</a>
+    <div id="partnerships-status"></div>
     
-    <h2>User 146775779 (should see partner 674146900)</h2>
-    <a href="/?testUserId=146775779" target="_blank">Test User 146775779</a>
+    <h2>Test Actions</h2>
+    <button onclick="checkAllPartnerships()">Refresh All Partnership Data</button>
+    <button onclick="clearSessionData()">Clear Session Data</button>
     
-    <h2>Regular User (should see no partner)</h2>
-    <a href="/" target="_blank">Regular User</a>
+    <h2>Server Logs</h2>
+    <p>Check server logs in the Replit console for detailed information.</p>
     
     <script>
-        // Log current partnerships for debugging
-        fetch('/api/partner/status/674146900')
-            .then(r => r.json())
-            .then(data => console.log('User 674146900 partnership:', data));
+        async function checkAllPartnerships() {
+            const statusDiv = document.getElementById('partnerships-status');
+            statusDiv.innerHTML = '<p>Loading...</p>';
             
-        fetch('/api/partner/status/146775779')
-            .then(r => r.json())
-            .then(data => console.log('User 146775779 partnership:', data));
+            const users = ['674146900', '146775779', '781652109', '797896838'];
+            let html = '';
+            
+            for (const userId of users) {
+                try {
+                    const response = await fetch(`/api/partner/status/${userId}`);
+                    const data = await response.json();
+                    
+                    const hasPartner = data.hasPartner;
+                    const partnerInfo = data.partnership;
+                    
+                    html += `
+                        <div class="status ${hasPartner ? 'partnership' : 'no-partner'}">
+                            <h3>User ID: ${userId}</h3>
+                            <p><strong>Has Partner:</strong> ${hasPartner ? 'Yes' : 'No'}</p>
+                            ${hasPartner ? `
+                                <p><strong>Partner ID:</strong> ${partnerInfo.partnerId}</p>
+                                <p><strong>Partner Name:</strong> ${partnerInfo.partnerName}</p>
+                                <p><strong>Status:</strong> ${partnerInfo.status}</p>
+                                <p><strong>Connected:</strong> ${new Date(partnerInfo.connectedAt).toLocaleString()}</p>
+                            ` : ''}
+                        </div>
+                    `;
+                } catch (error) {
+                    html += `
+                        <div class="status no-partner">
+                            <h3>User ID: ${userId}</h3>
+                            <p><strong>Error:</strong> ${error.message}</p>
+                        </div>
+                    `;
+                }
+            }
+            
+            statusDiv.innerHTML = html;
+        }
+        
+        function clearSessionData() {
+            sessionStorage.clear();
+            localStorage.clear();
+            console.log('Session and local storage cleared');
+            alert('Session data cleared. You can now test fresh connections.');
+        }
+        
+        // Auto-check on load
+        checkAllPartnerships();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(checkAllPartnerships, 30000);
     </script>
 </body>
 </html>
