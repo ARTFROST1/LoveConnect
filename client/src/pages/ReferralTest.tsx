@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useReferralLink } from '@/hooks/use-referral-link';
-import { CheckCircle, Copy, Users, TrendingUp, RefreshCw } from 'lucide-react';
+import { CheckCircle, Copy, Users, TrendingUp, RefreshCw, ExternalLink } from 'lucide-react';
+import { Link } from 'wouter';
 
 export default function ReferralTest() {
   const [testReferralCode, setTestReferralCode] = useState('');
@@ -242,6 +243,21 @@ export default function ReferralTest() {
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Дополнительные тесты */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Дополнительные тесты</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Link href="/test-referral-link">
+              <Button variant="outline" className="w-full justify-start">
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Симулировать переход по реферальной ссылке
+              </Button>
+            </Link>
           </CardContent>
         </Card>
 

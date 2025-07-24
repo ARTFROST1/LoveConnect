@@ -19,6 +19,7 @@ import InviteTest from "@/pages/InviteTest";
 import PartnerTest from "@/pages/PartnerTest";
 import StartappTest from "@/pages/StartappTest";
 import ReferralTest from "@/pages/ReferralTest";
+import TestReferralLink from "@/pages/TestReferralLink";
 import NotFound from "@/pages/not-found";
 
 // Import services
@@ -43,6 +44,7 @@ function Router() {
         <Route path="/partner-test" component={PartnerTest} />
         <Route path="/startapp-test" component={StartappTest} />
         <Route path="/referral-test" component={ReferralTest} />
+        <Route path="/test-referral-link" component={TestReferralLink} />
         <Route component={NotFound} />
       </Switch>
       <Navigation />

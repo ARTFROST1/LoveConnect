@@ -59,11 +59,19 @@ export function useReferralProcessing(): ReferralProcessingResult {
 
         console.log('Current user:', { id: currentUser.id, name: currentUser.first_name });
 
+        // Проверяем, не пытается ли пользователь использовать свой собственный реферальный код  
+        if (referralCode.includes(`ref_${currentUser.id}_`)) {
+          console.log('User trying to use their own referral code - ignoring');
+          setReferralProcessed(false);
+          setIsProcessing(false);
+          return;
+        }
+
         // Инициализируем базу данных
         await database.initialize();
 
         // Проверяем, есть ли уже партнер
-        const existingPartner = await database.getPartner();
+        const existingPartner = await database.getPartner(1); // ID текущего пользователя
         if (existingPartner) {
           console.log('User already has a partner, skipping referral processing');
           setReferralProcessed(true);
@@ -94,6 +102,8 @@ export function useReferralProcessing(): ReferralProcessingResult {
 
         // Создаем партнерство локально
         if (result.partnership) {
+          console.log('Creating local partnership:', result.partnership);
+          
           const newPartner = {
             userId: 1,
             partnerTelegramId: result.partnership.referrerId,
@@ -104,7 +114,18 @@ export function useReferralProcessing(): ReferralProcessingResult {
             referralConnectionId: result.partnership.connectionId
           };
 
-          await database.addPartner(newPartner);
+          console.log('Adding partner to local database:', newPartner);
+          
+          await database.addPartner(
+            newPartner.userId,
+            newPartner.partnerTelegramId,
+            newPartner.partnerName,
+            newPartner.partnerAvatar,
+            newPartner.connectedAt,
+            newPartner.status
+          );
+          
+          console.log('Partner added successfully to local database');
         }
 
         setReferralProcessed(true);
