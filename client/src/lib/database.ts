@@ -77,23 +77,6 @@ class SQLiteDatabase {
         type TEXT NOT NULL,
         unlocked_at TEXT NOT NULL
       );
-
-      CREATE TABLE IF NOT EXISTS hearts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        from_user_id INTEGER NOT NULL,
-        to_user_id INTEGER NOT NULL,
-        gifted_at TEXT NOT NULL,
-        message TEXT
-      );
-
-      CREATE TABLE IF NOT EXISTS activities (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        type TEXT NOT NULL,
-        description TEXT NOT NULL,
-        timestamp TEXT NOT NULL,
-        metadata TEXT
-      );
     `;
 
     this.db.exec(createTablesSQL);
@@ -277,93 +260,6 @@ class SQLiteDatabase {
     const unlockedAt = new Date().toISOString();
     const stmt = this.db!.prepare('INSERT INTO achievements (user_id, type, unlocked_at) VALUES (?, ?, ?)');
     stmt.run([userId, type, unlockedAt]);
-    stmt.free();
-    
-    this.saveDatabase();
-  }
-
-  async giftHeart(fromUserId: number, toUserId: number, message?: string): Promise<void> {
-    if (!this.db) await this.initialize();
-    
-    const giftedAt = new Date().toISOString();
-    const stmt = this.db!.prepare('INSERT INTO hearts (from_user_id, to_user_id, gifted_at, message) VALUES (?, ?, ?, ?)');
-    stmt.run([fromUserId, toUserId, giftedAt, message || null]);
-    stmt.free();
-    
-    this.saveDatabase();
-  }
-
-  async canGiftHeartToday(fromUserId: number, toUserId: number): Promise<boolean> {
-    if (!this.db) await this.initialize();
-    
-    const today = new Date().toISOString().split('T')[0]; // Get YYYY-MM-DD format
-    const stmt = this.db!.prepare('SELECT COUNT(*) as count FROM hearts WHERE from_user_id = ? AND to_user_id = ? AND DATE(gifted_at) = ?');
-    const result = stmt.getAsObject([fromUserId, toUserId, today]);
-    stmt.free();
-    
-    return (result['count'] as number) === 0;
-  }
-
-  async getReceivedHearts(userId: number, limit: number = 10): Promise<any[]> {
-    if (!this.db) await this.initialize();
-    
-    const stmt = this.db!.prepare('SELECT * FROM hearts WHERE to_user_id = ? ORDER BY gifted_at DESC LIMIT ?');
-    const results = [];
-    
-    while (stmt.step()) {
-      results.push(stmt.getAsObject());
-    }
-    
-    stmt.free();
-    return results;
-  }
-
-  async addActivity(userId: number, type: string, description: string, metadata?: string): Promise<void> {
-    if (!this.db) await this.initialize();
-    
-    const timestamp = new Date().toISOString();
-    const stmt = this.db!.prepare('INSERT INTO activities (user_id, type, description, timestamp, metadata) VALUES (?, ?, ?, ?, ?)');
-    stmt.run([userId, type, description, timestamp, metadata || null]);
-    stmt.free();
-    
-    this.saveDatabase();
-  }
-
-  async getRecentActivities(userId: number, limit: number = 10): Promise<any[]> {
-    if (!this.db) await this.initialize();
-    
-    const stmt = this.db!.prepare('SELECT * FROM activities WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?');
-    const results = [];
-    
-    while (stmt.step()) {
-      results.push(stmt.getAsObject());
-    }
-    
-    stmt.free();
-    return results;
-  }
-
-  async getConnectionScore(userId: number): Promise<number> {
-    if (!this.db) await this.initialize();
-    
-    // Calculate connection score based on games played, hearts received, and days connected
-    const gamesStmt = this.db!.prepare('SELECT COUNT(*) as count FROM game_sessions WHERE status = "completed"');
-    const games = gamesStmt.getAsObject()['count'] as number;
-    gamesStmt.free();
-    
-    const heartsStmt = this.db!.prepare('SELECT COUNT(*) as count FROM hearts WHERE to_user_id = ?');
-    const hearts = heartsStmt.getAsObject([userId])['count'] as number;
-    heartsStmt.free();
-    
-    // Simple scoring algorithm: games * 5 + hearts * 10 + random factor
-    return Math.min(games * 5 + hearts * 10 + Math.floor(Math.random() * 20), 100);
-  }
-
-  async removePartner(userId: number): Promise<void> {
-    if (!this.db) await this.initialize();
-    
-    const stmt = this.db!.prepare('DELETE FROM partners WHERE user_id = ?');
-    stmt.run([userId]);
     stmt.free();
     
     this.saveDatabase();
