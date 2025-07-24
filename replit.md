@@ -19,6 +19,16 @@ Preferred communication style: Simple, everyday language.
 **Date**: July 24, 2025 - Upgraded to use new working URL: `https://a14f2b3f-23b7-4c7f-9880-b16a8d739822-00-3bbojmz63mcbx.spock.replit.dev`
 **Date**: July 24, 2025 - Successfully migrated from Replit Agent to full Replit environment with enhanced startapp parameter support
 
+### Enhanced startapp Implementation (Completed)
+**Problem**: Previous system used incorrect invite link format, causing startapp parameters to be lost
+**Root Cause**: Generated links like `https://replit.dev?startapp=...` instead of proper Telegram WebApp format
+**Solution**: Updated to generate correct `https://t.me/duolove_bot/app?startapp=invite_{id}` format
+**Features Added**:
+- Proper Telegram WebApp invite link generation
+- Enhanced parameter detection (startapp, tgWebAppStartParam, legacy support)  
+- Comprehensive test page at `/startapp-test` for validation
+- Full compatibility with Telegram WebApp API specification
+
 ## System Architecture
 
 ### Frontend Architecture

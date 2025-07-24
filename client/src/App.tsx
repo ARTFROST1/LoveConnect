@@ -17,6 +17,7 @@ import TestPage from "@/pages/TestPage";
 import TestInvite from "@/pages/TestInvite";
 import InviteTest from "@/pages/InviteTest";
 import PartnerTest from "@/pages/PartnerTest";
+import StartappTest from "@/pages/StartappTest";
 import NotFound from "@/pages/not-found";
 
 // Import services
@@ -39,6 +40,7 @@ function Router() {
         <Route path="/test-invite" component={TestInvite} />
         <Route path="/invite-test" component={InviteTest} />
         <Route path="/partner-test" component={PartnerTest} />
+        <Route path="/startapp-test" component={StartappTest} />
         <Route component={NotFound} />
       </Switch>
       <Navigation />

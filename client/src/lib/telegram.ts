@@ -389,14 +389,8 @@ class TelegramService {
   }
 
   async generateInviteLink(userId: string): Promise<string> {
-    if (this.isDevelopment) {
-      // In development, generate a link that can be tested in the same app
-      const currentUrl = window.location.origin;
-      return `${currentUrl}?start=invite_${userId}&testUserId=${parseInt(userId) + 1}`;
-    }
-    
     try {
-      // Use server API to generate invite link with startapp parameter
+      // Always use server API to generate the proper Telegram WebApp invite link
       const response = await fetch('/api/invite/generate', {
         method: 'POST',
         headers: {
@@ -413,7 +407,7 @@ class TelegramService {
       return data.inviteLink;
     } catch (error) {
       console.error('Error generating invite link:', error);
-      // Fallback to manual generation with startapp parameter
+      // Fallback to manual generation with proper Telegram WebApp startapp parameter
       const botUsername = import.meta.env.VITE_BOT_USERNAME || 'duolove_bot';
       return `https://t.me/${botUsername}/app?startapp=invite_${userId}`;
     }
