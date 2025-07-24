@@ -145,18 +145,21 @@ export function useInviteProcessing(): InviteProcessingResult {
       });
 
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Не удалось обработать приглашение';
       console.error('Error processing invite:', err);
-      setError(errorMessage);
       
-      // Only show toast error if we actually had an invite to process
-      const startParam = await telegramService.getStartParamWithRetry();
-      if (startParam && startParam.startsWith('invite_')) {
+      // Don't show error to user for invalid invites - just log and continue
+      setError(null);
+      setInviteProcessed(false);
+      
+      // Only show error if it's a real processing error, not just missing parameters
+      if (err instanceof Error && !err.message.includes('No user data') && !err.message.includes('parameter')) {
         toast({
-          title: "Ошибка",
-          description: errorMessage,
+          title: "Ошибка подключения",
+          description: "Не удалось подключиться к партнёру. Попробуйте позже.",
           variant: "destructive",
+          duration: 3000
         });
+        telegramService.hapticFeedback('notification', 'error');
       }
     } finally {
       setIsProcessing(false);

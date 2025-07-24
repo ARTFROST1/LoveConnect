@@ -179,6 +179,8 @@ class TelegramService {
 
   get startParam() {
     console.log('Getting start param, checking all sources...');
+    console.log('Current URL:', window.location.href);
+    console.log('initDataUnsafe:', this.tg?.initDataUnsafe);
     
     // Method 1: Check Telegram WebApp initDataUnsafe (primary method)
     if (this.tg?.initDataUnsafe?.start_param) {
@@ -188,6 +190,8 @@ class TelegramService {
     
     // Method 2: Check URL params (tgWebAppStartParam is official parameter)
     const urlParams = new URLSearchParams(window.location.search);
+    console.log('URL search params:', urlParams.toString());
+    
     let startParam = urlParams.get('tgWebAppStartParam');
     if (startParam) {
       console.log('Found start_param from tgWebAppStartParam:', startParam);
@@ -203,6 +207,7 @@ class TelegramService {
     
     // Method 4: Check fragment (hash) parameters  
     const hash = window.location.hash.substring(1);
+    console.log('URL hash:', hash);
     if (hash && hash.startsWith('start=')) {
       const hashStart = hash.replace('start=', '');
       console.log('Found start_param from hash:', hashStart);
