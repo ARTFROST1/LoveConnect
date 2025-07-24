@@ -11,6 +11,7 @@ import AddPartner from "@/pages/AddPartner";
 import GameList from "@/pages/GameList";
 import GameRoom from "@/pages/GameRoom";
 import History from "@/pages/History";
+import Profile from "@/pages/Profile";
 import Navigation from "@/components/Navigation";
 import TestPage from "@/pages/TestPage";
 import TestInvite from "@/pages/TestInvite";
@@ -31,7 +32,7 @@ function Router() {
         <Route path="/games" component={GameList} />
         <Route path="/game/:gameId" component={GameRoom} />
         <Route path="/history" component={History} />
-        <Route path="/profile" component={Home} /> {/* Profile redirects to home for now */}
+        <Route path="/profile" component={Profile} />
         <Route path="/test" component={TestPage} />
         <Route path="/test-invite" component={TestInvite} />
         <Route path="/partner-test" component={PartnerTest} />

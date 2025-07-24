@@ -264,6 +264,40 @@ class SQLiteDatabase {
     
     this.saveDatabase();
   }
+
+  async getAllGameSessions(): Promise<any[]> {
+    if (!this.db) await this.initialize();
+    
+    const stmt = this.db!.prepare('SELECT * FROM game_sessions ORDER BY started_at DESC');
+    const results = [];
+    
+    while (stmt.step()) {
+      results.push(stmt.getAsObject());
+    }
+    
+    stmt.free();
+    return results;
+  }
+
+  async getUserAchievements(userId: number): Promise<any[]> {
+    if (!this.db) await this.initialize();
+    
+    const stmt = this.db!.prepare('SELECT * FROM achievements WHERE user_id = ?');
+    const results = [];
+    
+    try {
+      stmt.bind([userId]);
+      while (stmt.step()) {
+        results.push(stmt.getAsObject());
+      }
+    } catch (error) {
+      console.error('Error fetching user achievements:', error);
+    } finally {
+      stmt.free();
+    }
+    
+    return results;
+  }
 }
 
 export const database = new SQLiteDatabase();
