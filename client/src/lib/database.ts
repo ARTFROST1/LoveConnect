@@ -140,7 +140,9 @@ class SQLiteDatabase {
     const result = stmt.getAsObject([userId]);
     stmt.free();
     
-    return Object.keys(result).length > 0 ? result : null;
+    // Check if result has meaningful data (not just empty object)
+    const hasData = result && Object.keys(result).length > 0 && result.id;
+    return hasData ? result : null;
   }
 
   async addPartner(userId: number, partnerTelegramId: string, partnerName: string, partnerAvatar?: string | null, status: string = 'pending', inviterUserId?: string): Promise<any> {

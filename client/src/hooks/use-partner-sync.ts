@@ -18,9 +18,12 @@ export function usePartnerSync(userId: number): PartnerSyncResult {
     try {
       setIsLoading(true);
       const dbPartner = await database.getPartner(userId);
+      console.log('Partner data from DB:', dbPartner);
       setPartner(dbPartner);
     } catch (error) {
       console.error('Error refreshing partner:', error);
+      // Ensure partner is set to null on error
+      setPartner(null);
     } finally {
       setIsLoading(false);
     }

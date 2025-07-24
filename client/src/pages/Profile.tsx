@@ -103,7 +103,11 @@ export default function Profile() {
   const { partner: syncedPartner, isLoading: partnerLoading, refreshPartner } = usePartnerSync(user?.id ? parseInt(user.id) : 0);
 
   // Convert synced partner to PartnerProfile format
-  const partner: PartnerProfile | null = syncedPartner ? {
+  // Check if syncedPartner is valid (not null and has required properties)
+  const partner: PartnerProfile | null = (syncedPartner && 
+    syncedPartner.id && 
+    syncedPartner.partner_name && 
+    syncedPartner.partner_telegram_id) ? {
     id: syncedPartner.id,
     name: syncedPartner.partner_name,
     avatar: syncedPartner.partner_avatar,
