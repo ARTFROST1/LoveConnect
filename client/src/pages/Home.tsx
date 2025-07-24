@@ -183,15 +183,17 @@ export default function Home() {
     }
   ];
 
-  // Экран загрузки для обработки реферальных ссылок теперь в App.tsx
-  // Здесь убираем дублирующую логику
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
-  // Показываем экран "Добро пожаловать" только если:
-  // 1. Данные загружены (!loading)
-  // 2. Партнера точно нет (!partner)
-  // 3. Сервер тоже не показывает партнера (!serverPartnerStatus)
-  // 4. Нет активной загрузки партнера (!partnerLoading)
-  const shouldShowWelcome = !loading && !partnerLoading && !partner && !serverPartnerStatus;
+  // Показываем основной интерфейс даже если партнер еще загружается
+  // Экран "Добро пожаловать" показываем только если данные точно загружены и партнера нет
+  const shouldShowWelcome = !partnerLoading && !partner && !serverPartnerStatus;
   
   if (shouldShowWelcome) {
     return (
@@ -251,10 +253,8 @@ export default function Home() {
                 >
                   {partner?.avatar ? (
                     <img src={partner.avatar} alt="Partner" className="w-full h-full rounded-full object-cover" />
-                  ) : serverPartnerStatus?.partnerName ? (
-                    <span className="text-white font-semibold">{serverPartnerStatus.partnerName.charAt(0)}</span>
                   ) : (
-                    <span className="text-white font-semibold">P</span>
+                    <span className="text-white font-semibold">{partner?.name?.charAt(0) || 'P'}</span>
                   )}
                 </div>
                 <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>
@@ -263,7 +263,7 @@ export default function Home() {
             
             <div className="text-center">
               <h3 className="font-semibold text-lg text-gray-800 dark:text-gray-100">
-                {user?.name} & {partner?.name || serverPartnerStatus?.partnerName || 'Партнёр'}
+                {user?.name} & {partner?.name || 'Партнёр'}
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Играете вместе {getDaysPlaying()} дней
@@ -288,12 +288,10 @@ export default function Home() {
                     <span>Загружаем данные...</span>
                   </div>
                 ) : (
-                  <Link href="/add-partner">
-                    <div className="text-xs text-blue-600 dark:text-blue-400 font-medium flex items-center space-x-1 cursor-pointer hover:text-blue-700 dark:hover:text-blue-300">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                      <span>Найти партнёра</span>
-                    </div>
-                  </Link>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 font-medium flex items-center space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                    <span>Найти партнёра</span>
+                  </div>
                 )}
                 {!partnerLoading && (
                   <button 
