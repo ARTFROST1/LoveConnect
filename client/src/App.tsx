@@ -28,7 +28,6 @@ import { telegramService } from "@/lib/telegram";
 import { database } from "@/lib/database";
 import { useReferralProcessing } from "@/hooks/use-referral-processing";
 import { usePartnerSync } from "@/hooks/use-partner-sync";
-import { usePartnerStatus } from "@/hooks/use-partner-status";
 
 function AppContent() {
   const [user, setUser] = useState<any>(null);
@@ -53,17 +52,15 @@ function AppContent() {
     initializeUser();
   }, []);
 
-  // Check partner status
+  // Check partner status using only one hook to avoid conflicts
   const { partner: syncedPartner, isLoading: partnerLoading } = usePartnerSync(user?.id || 0);
-  const { partnerStatus: serverPartnerStatus } = usePartnerStatus();
 
   // Determine if user has a partner
   const hasPartner = Boolean(
-    (syncedPartner && syncedPartner.id && syncedPartner.partner_name && syncedPartner.partner_telegram_id) ||
-    serverPartnerStatus
+    syncedPartner && syncedPartner.id && syncedPartner.partner_name && syncedPartner.partner_telegram_id
   );
 
-  // Show welcome screen only on home route when no partner exists
+  // Show welcome screen only on home route when no partner exists and data is loaded
   const shouldShowWelcome = userLoaded && location === '/' && !hasPartner && !partnerLoading;
 
   // Show navigation only when user has a partner or on non-home routes

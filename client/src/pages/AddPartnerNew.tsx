@@ -2,12 +2,22 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Copy, Share, Users, Zap, RefreshCw, TrendingUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { usePartnerStatus } from '@/hooks/use-partner-status';
+import { usePartnerSync } from '@/hooks/use-partner-sync';
 import { useReferralLink } from '@/hooks/use-referral-link';
+import { telegramService } from '@/lib/telegram';
 
 export default function AddPartner() {
   const { toast } = useToast();
-  const { hasPartner, partnerData } = usePartnerStatus();
+  const user = telegramService.user;
+  const { partner: syncedPartner } = usePartnerSync(user?.id || 0);
+  
+  // Check if user has partner
+  const hasPartner = Boolean(
+    syncedPartner && syncedPartner.id && syncedPartner.partner_name && syncedPartner.partner_telegram_id
+  );
+  const partnerData = hasPartner ? {
+    partnerName: syncedPartner?.partner_name
+  } : null;
   const { referralLink, referralCode, isLoading, error, copyLink, regenerateCode } = useReferralLink();
 
   const shareReferralLink = async () => {

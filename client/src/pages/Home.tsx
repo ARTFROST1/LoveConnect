@@ -7,7 +7,6 @@ import { database } from "@/lib/database";
 import { telegramService } from "@/lib/telegram";
 import { UserProfile, PartnerProfile } from "@/types/models";
 import { usePartnerSync } from "@/hooks/use-partner-sync";
-import { usePartnerStatus } from "@/hooks/use-partner-status";
 import { useReferralProcessing } from "@/hooks/use-referral-processing";
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
@@ -22,12 +21,10 @@ export default function Home() {
   // Реферальная система - обработка входящих реферальных ссылок
   const { isProcessing: referralProcessing, referralProcessed } = useReferralProcessing();
 
-  // Use both local sync and server status for comprehensive partner management
+  // Use unified partner sync for consistent partner management
   const { partner: syncedPartner, isLoading: partnerLoading, refreshPartner } = usePartnerSync(user?.id ? parseInt(user.id) : 0);
-  const { partnerStatus: serverPartnerStatus, refreshStatus: refreshServerStatus } = usePartnerStatus();
 
   // Convert synced partner to PartnerProfile format
-  // Check both local database and server status for complete picture
   const partner: PartnerProfile | null = (syncedPartner && 
     syncedPartner.id && 
     syncedPartner.partner_name && 
@@ -37,13 +34,7 @@ export default function Home() {
     avatar: syncedPartner.partner_avatar,
     telegramId: syncedPartner.partner_telegram_id,
     connectedAt: syncedPartner.connected_at
-  } : (serverPartnerStatus ? {
-    id: parseInt(serverPartnerStatus.partnerId) || 0,
-    name: serverPartnerStatus.partnerName,
-    avatar: null,
-    telegramId: serverPartnerStatus.partnerId,
-    connectedAt: serverPartnerStatus.createdAt
-  } : null);
+  } : null;
 
   useEffect(() => {
     initializeUser();
@@ -250,7 +241,7 @@ export default function Home() {
               
               {/* Partner Status Indicator */}
               <div className="flex items-center justify-center mt-3 space-x-2">
-                {partner || serverPartnerStatus ? (
+                {partner ? (
                   <div className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center space-x-1">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                     <span>Партнёр подключён</span>

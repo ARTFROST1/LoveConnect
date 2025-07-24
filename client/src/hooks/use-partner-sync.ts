@@ -80,11 +80,11 @@ export function usePartnerSync(userId: number): PartnerSyncResult {
   useEffect(() => {
     refreshPartner();
 
-    // Set up interval to check for partner updates every 5 seconds
+    // Set up interval to check for partner updates every 15 seconds
     // This helps detect when the inviter accepts the connection
     const interval = setInterval(() => {
       refreshPartner();
-    }, 5000);
+    }, 15000);
 
     // Listen for visibility changes to refresh when app becomes active
     const handleVisibilityChange = () => {
