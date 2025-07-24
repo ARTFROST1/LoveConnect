@@ -131,11 +131,11 @@ export function useReferralProcessing(): ReferralProcessingResult {
         setReferralProcessed(true);
         setIsProcessing(false);
 
-        // Показываем сообщение об успехе
-        toast({
-          title: "Подключение установлено!",
-          description: `Вы успешно подключились к партнёру по реферальной ссылке!`,
-        });
+        // Убираем toast уведомления для улучшения UX
+        // toast({
+        //   title: "Подключение установлено!",
+        //   description: `Вы успешно подключились к партнёру по реферальной ссылке!`,
+        // });
 
         // Очищаем URL от реферального параметра (только если это был URL параметр)
         if (window.location.search.includes('ref=')) {
@@ -151,11 +151,12 @@ export function useReferralProcessing(): ReferralProcessingResult {
         setReferralProcessed(false);
         
         if (err instanceof Error) {
-          toast({
-            title: "Ошибка подключения",
-            description: err.message,
-            variant: "destructive",
-          });
+          // Убираем toast уведомления об ошибках для улучшения UX
+          // toast({
+          //   title: "Ошибка подключения",
+          //   description: err.message,
+          //   variant: "destructive",
+          // });
           setError(err.message);
         }
         

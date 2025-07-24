@@ -34,15 +34,15 @@ export function usePartnerStatus(): PartnerStatusHook {
         const data = await response.json();
         setPartnerStatus(data.partnership);
         
-        // Show notification if partner status changed
-        if (data.partnership && !partnerStatus) {
-          toast({
-            title: "Партнёр подключился!",
-            description: `${data.partnership.partnerName} принял ваше приглашение`,
-            duration: 5000
-          });
-          telegramService.hapticFeedback('notification', 'success');
-        }
+        // Убираем уведомления о подключении партнера для улучшения UX
+        // if (data.partnership && !partnerStatus) {
+        //   toast({
+        //     title: "Партнёр подключился!",
+        //     description: `${data.partnership.partnerName} принял ваше приглашение`,
+        //     duration: 5000
+        //   });
+        //   telegramService.hapticFeedback('notification', 'success');
+        // }
       } else {
         setPartnerStatus(null);
       }
