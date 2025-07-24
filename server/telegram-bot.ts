@@ -90,9 +90,16 @@ class DuoLoveTelegramBot {
     });
 
     try {
-      // For Telegram WebApp, pass start parameter via tgWebAppStartParam
-      // This is the proper way for Telegram to pass parameters to WebApp
-      const webAppUrlWithParam = `${this.webAppUrl}?tgWebAppStartParam=${startParam}`;
+      // For Telegram WebApp, we need to use the proper method to pass start parameters
+      // In development mode, use URL parameter; in production, use WebApp's built-in mechanism
+      let webAppUrlWithParam;
+      if (this.isDevelopment) {
+        // In development, use direct URL parameters that our app can read
+        webAppUrlWithParam = `${this.webAppUrl}?start=${startParam}&testUserId=${parseInt(inviterUserId) + 1}`;
+      } else {
+        // In production, let Telegram handle the start parameter properly
+        webAppUrlWithParam = this.webAppUrl;
+      }
       
       const keyboard = {
         inline_keyboard: [[
@@ -106,8 +113,7 @@ class DuoLoveTelegramBot {
       await this.bot.sendMessage(chatId, 
         `🎉 Вас пригласили играть в DuoLove!\n\n` +
         `Откройте приложение, чтобы подключиться к партнёру и начать играть в мини-игры вместе.\n\n` +
-        `После подключения ваш партнёр получит уведомление о том, что вы приняли приглашение.\n\n` +
-        `<i>Параметр: ${startParam}</i>`,
+        `После подключения ваш партнёр получит уведомление о том, что вы приняли приглашение.${this.isDevelopment ? `\n\n<i>URL: ${webAppUrlWithParam}</i>` : ''}`,
         {
           reply_markup: keyboard,
           parse_mode: 'HTML'

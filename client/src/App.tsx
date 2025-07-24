@@ -15,6 +15,7 @@ import Profile from "@/pages/Profile";
 import Navigation from "@/components/Navigation";
 import TestPage from "@/pages/TestPage";
 import TestInvite from "@/pages/TestInvite";
+import InviteTest from "@/pages/InviteTest";
 import PartnerTest from "@/pages/PartnerTest";
 import NotFound from "@/pages/not-found";
 
@@ -36,6 +37,7 @@ function Router() {
         <Route path="/profile/:partnerId" component={Profile} />
         <Route path="/test" component={TestPage} />
         <Route path="/test-invite" component={TestInvite} />
+        <Route path="/invite-test" component={InviteTest} />
         <Route path="/partner-test" component={PartnerTest} />
         <Route component={NotFound} />
       </Switch>

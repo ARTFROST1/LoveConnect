@@ -75,7 +75,12 @@ class TelegramService {
 
   constructor() {
     if (typeof window !== 'undefined') {
-      if (window.Telegram?.WebApp) {
+      // Check if we're in development mode first
+      this.isDevelopment = !window.Telegram?.WebApp || 
+                          window.location.hostname.includes('replit.dev') ||
+                          window.location.hostname === 'localhost';
+      
+      if (window.Telegram?.WebApp && !this.isDevelopment) {
         this.tg = window.Telegram.WebApp;
         console.log('Telegram WebApp found:', {
           version: this.tg.version,
@@ -84,12 +89,55 @@ class TelegramService {
         });
         this.initialize();
       } else {
-        // Development mode - create mock user data
+        // Development mode - create mock user data with proper fallbacks
         this.isDevelopment = true;
         console.log('Running in development mode - using mock Telegram data');
         this.isInitialized = true;
+        
+        // Create mock WebApp object for development
+        this.tg = {
+          version: '7.0',
+          initData: '',
+          initDataUnsafe: this.createMockInitData(),
+          colorScheme: 'light',
+          ready: () => {},
+          expand: () => {},
+          close: () => {},
+          MainButton: {
+            setText: () => {},
+            onClick: () => {},
+            show: () => {},
+            hide: () => {}
+          },
+          BackButton: {
+            onClick: () => {},
+            show: () => {},
+            hide: () => {}
+          },
+          HapticFeedback: {
+            impactOccurred: () => {},
+            notificationOccurred: () => {},
+            selectionChanged: () => {}
+          }
+        } as any;
       }
     }
+  }
+
+  private createMockInitData() {
+    // Extract start param from URL for development mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const startParam = urlParams.get('tgWebAppStartParam') || urlParams.get('start');
+    
+    return {
+      user: {
+        id: 803210627, // Mock user ID for development
+        first_name: 'Test',
+        last_name: 'User',
+        username: 'testuser'
+      },
+      start_param: startParam || undefined
+    };
   }
 
   private initialize(): void {
