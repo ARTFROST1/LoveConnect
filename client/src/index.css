@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Swiper Pagination Styles */
+.suggestion-swiper .swiper-pagination {
+  position: relative;
+  margin-top: 16px;
+}
+
+.suggestion-swiper .swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+  background: rgba(156, 163, 175, 0.5);
+  opacity: 1;
+  transition: all 0.3s ease;
+}
+
+.suggestion-swiper .swiper-pagination-bullet-active {
+  background: rgb(79, 70, 229);
+  transform: scale(1.2);
+}
+
 :root {
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(20, 14.3%, 4.1%);

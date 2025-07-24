@@ -2,20 +2,22 @@ import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, Trophy, Flame, Play, RefreshCw } from "lucide-react";
+import { Heart, Play, RefreshCw, Sparkles, Target, Clock, Star, Brain, Zap, Gift } from "lucide-react";
 import { database } from "@/lib/database";
 import { telegramService } from "@/lib/telegram";
-import { GameStats, UserProfile, PartnerProfile } from "@/types/models";
+import { UserProfile, PartnerProfile } from "@/types/models";
 import { usePartnerSync } from "@/hooks/use-partner-sync";
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
 
 export default function Home() {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [stats, setStats] = useState<GameStats | null>(null);
-  const [gameHistory, setGameHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Use the partner sync hook for real-time updates
-  const { partner: syncedPartner, isLoading: partnerLoading, refreshPartner } = usePartnerSync(user?.id || 0);
+  const { partner: syncedPartner, isLoading: partnerLoading, refreshPartner } = usePartnerSync(user?.id ? parseInt(user.id) : 0);
 
   // Convert synced partner to PartnerProfile format
   const partner: PartnerProfile | null = syncedPartner ? {
@@ -71,12 +73,7 @@ export default function Home() {
       // Trigger a refresh to get the latest partner data
       setTimeout(() => refreshPartner(), 100);
 
-      // Get stats and history
-      const gameStats = await database.getGameStats();
-      setStats(gameStats);
-
-      const history = await database.getGameHistory(5);
-      setGameHistory(history);
+      // No need to load stats and history for home page anymore
 
     } catch (error) {
       console.error('Failed to initialize user:', error);
@@ -93,16 +90,69 @@ export default function Home() {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  const formatTimeAgo = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffHours < 1) return 'Только что';
-    if (diffHours < 24) return `${diffHours}ч назад`;
-    const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays}д назад`;
-  };
+  // Carousel suggestions data
+  const suggestions = [
+    {
+      id: 1,
+      title: "Откройте новое задание",
+      description: "Попробуйте что-то новенькое вместе",
+      icon: Sparkles,
+      gradient: "from-purple-400 to-pink-400",
+      link: "/games"
+    },
+    {
+      id: 2,
+      title: "Попробуйте парный квест",
+      description: "Совместное приключение ждёт вас",
+      icon: Target,
+      gradient: "from-blue-400 to-cyan-400",
+      link: "/games?highlight=paired-quest"
+    },
+    {
+      id: 3,
+      title: "Сыграйте за 3 минуты",
+      description: "Быстрая игра для хорошего настроения",
+      icon: Clock,
+      gradient: "from-green-400 to-emerald-400",
+      link: "/games?highlight=reaction-test"
+    },
+    {
+      id: 4,
+      title: "Сегодняшний челлендж",
+      description: "Ежедневная доза веселья и близости",
+      icon: Star,
+      gradient: "from-orange-400 to-red-400",
+      link: "/games?highlight=daily-challenge"
+    }
+  ];
+
+  // Recommended games data
+  const recommendedGames = [
+    {
+      id: 1,
+      title: "Новинка недели",
+      description: "Кто кого лучше знает",
+      icon: Brain,
+      link: "/games?highlight=knowledge-test",
+      color: "bg-gradient-to-br from-purple-500 to-purple-600"
+    },
+    {
+      id: 2,
+      title: "Лучшее для пар",
+      description: "Тест на реакцию",
+      icon: Zap,
+      link: "/games?highlight=reaction-test",
+      color: "bg-gradient-to-br from-blue-500 to-blue-600"
+    },
+    {
+      id: 3,
+      title: "Классика",
+      description: "Правда или действие",
+      icon: Gift,
+      link: "/games?highlight=truth-or-dare",
+      color: "bg-gradient-to-br from-pink-500 to-pink-600"
+    }
+  ];
 
   if (loading) {
     return (
@@ -180,9 +230,9 @@ export default function Home() {
                 Играете вместе {getDaysPlaying()} дней
               </p>
               <div className="flex items-center justify-center mt-2 space-x-2">
-                <Flame className="w-4 h-4 text-accent" />
-                <span className="text-sm font-medium text-accent">
-                  {stats?.currentStreak || 0} дней подряд
+                <Heart className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium text-primary">
+                  Вместе делаем каждый день особенным
                 </span>
               </div>
               
@@ -208,28 +258,44 @@ export default function Home() {
         </Card>
       </div>
 
-      {/* Quick Stats */}
+      {/* Suggestion Carousel */}
       <div className="px-4 mb-6">
-        <div className="grid grid-cols-3 gap-3">
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-primary">{stats?.gamesPlayed || 0}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">Игр сыграно</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-secondary">{stats?.achievements || 0}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">Достижений</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-accent">{stats?.hearts || 0}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">Сердечек</div>
-            </CardContent>
-          </Card>
-        </div>
+        <h3 className="font-semibold text-gray-800 dark:text-gray-100 mb-3 text-lg">Что попробовать сегодня?</h3>
+        <Swiper
+          modules={[Autoplay, Pagination]}
+          spaceBetween={16}
+          slidesPerView={1.2}
+          autoplay={{
+            delay: 4000,
+            disableOnInteraction: false,
+          }}
+          pagination={{
+            clickable: true,
+            dynamicBullets: true,
+          }}
+          className="suggestion-swiper"
+        >
+          {suggestions.map((suggestion) => {
+            const IconComponent = suggestion.icon;
+            return (
+              <SwiperSlide key={suggestion.id}>
+                <Link href={suggestion.link}>
+                  <Card className="h-full bg-gradient-to-br border-none shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer overflow-hidden">
+                    <CardContent className={`p-6 bg-gradient-to-br ${suggestion.gradient} text-white relative`}>
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10"></div>
+                      <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8"></div>
+                      <div className="relative z-10">
+                        <IconComponent className="w-8 h-8 mb-3 text-white/90" />
+                        <h4 className="font-bold text-lg mb-2">{suggestion.title}</h4>
+                        <p className="text-sm text-white/80 leading-relaxed">{suggestion.description}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </SwiperSlide>
+            );
+          })}
+        </Swiper>
       </div>
 
       {/* Start Game Button */}
@@ -242,43 +308,66 @@ export default function Home() {
         </Link>
       </div>
 
-      {/* Recent Activities */}
+      {/* Recommended Games */}
       <div className="px-4 mb-20">
-        <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-3">Последние активности</h4>
-        <div className="space-y-3">
-          {gameHistory.length === 0 ? (
-            <Card>
-              <CardContent className="p-4 text-center text-gray-500 dark:text-gray-400">
-                Пока нет сыгранных игр
-              </CardContent>
-            </Card>
-          ) : (
-            gameHistory.map((game, index) => (
-              <Card key={index}>
-                <CardContent className="p-4 flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
-                    <Trophy className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800 dark:text-gray-100">
-                      {game.game_type === 'knowledge-test' && 'Кто кого лучше знает'}
-                      {game.game_type === 'reaction-test' && 'Тест на реакцию'}
-                      {game.game_type === 'paired-quest' && 'Парный квест'}
-                      {game.game_type === 'daily-challenge' && 'Задание дня'}
-                      {game.game_type === 'truth-or-dare' && 'Правда или действие'}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Вы: {game.user_score}, Партнёр: {game.partner_score}
-                    </p>
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    {formatTimeAgo(game.finished_at)}
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
+        <h3 className="font-semibold text-gray-800 dark:text-gray-100 mb-4 text-lg">Рекомендуем попробовать</h3>
+        <div className="grid grid-cols-2 gap-4">
+          {recommendedGames.slice(0, 2).map((game) => {
+            const IconComponent = game.icon;
+            return (
+              <Link key={game.id} href={game.link}>
+                <Card className="h-full hover:shadow-lg transition-all duration-300 transform hover:scale-105 cursor-pointer border-none shadow-md">
+                  <CardContent className={`p-4 ${game.color} text-white relative overflow-hidden h-full`}>
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -mr-8 -mt-8"></div>
+                    <div className="relative z-10 flex flex-col h-full">
+                      <IconComponent className="w-6 h-6 mb-2 text-white/90" />
+                      <h4 className="font-bold text-sm mb-1">{game.title}</h4>
+                      <p className="text-xs text-white/80 flex-1">{game.description}</p>
+                      <Button 
+                        size="sm" 
+                        variant="secondary" 
+                        className="mt-3 bg-white/20 hover:bg-white/30 text-white border-white/30 text-xs"
+                      >
+                        Открыть
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
+        
+        {/* Third game takes full width */}
+        {recommendedGames[2] && (() => {
+          const IconComponent = recommendedGames[2].icon;
+          return (
+            <div className="mt-4">
+              <Link href={recommendedGames[2].link}>
+                <Card className="hover:shadow-lg transition-all duration-300 transform hover:scale-105 cursor-pointer border-none shadow-md">
+                  <CardContent className={`p-4 ${recommendedGames[2].color} text-white relative overflow-hidden`}>
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10"></div>
+                    <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8"></div>
+                    <div className="relative z-10 flex items-center space-x-4">
+                      <IconComponent className="w-8 h-8 text-white/90 flex-shrink-0" />
+                      <div className="flex-1">
+                        <h4 className="font-bold text-base mb-1">{recommendedGames[2].title}</h4>
+                        <p className="text-sm text-white/80">{recommendedGames[2].description}</p>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        variant="secondary" 
+                        className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                      >
+                        Открыть
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
