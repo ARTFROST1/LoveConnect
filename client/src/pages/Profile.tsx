@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useParams } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -34,7 +34,8 @@ import {
   Camera,
   Users,
   ArrowLeft,
-  UserX
+  UserX,
+  Settings
 } from "lucide-react";
 import { database } from "@/lib/database";
 import { telegramService } from "@/lib/telegram";
@@ -93,13 +94,13 @@ export default function Profile() {
   const [isRemovingPartner, setIsRemovingPartner] = useState(false);
   const { toast } = useToast();
 
-  // Check if we're viewing a partner's profile
-  const urlParams = new URLSearchParams(location.split('?')[1] || '');
-  const partnerId = urlParams.get('partnerId');
+  // Check if we're viewing a partner's profile using route params
+  const params = useParams();
+  const partnerId = params.partnerId;
   const isViewingPartner = Boolean(partnerId);
   
   // Use the partner sync hook for real-time updates
-  const { partner: syncedPartner, isLoading: partnerLoading } = usePartnerSync(user?.id ? parseInt(user.id) : 0);
+  const { partner: syncedPartner, isLoading: partnerLoading, refreshPartner } = usePartnerSync(user?.id ? parseInt(user.id) : 0);
 
   // Convert synced partner to PartnerProfile format
   const partner: PartnerProfile | null = syncedPartner ? {
@@ -348,7 +349,7 @@ export default function Profile() {
     } else if (partner) {
       // Go to partner profile
       telegramService.hapticFeedback('selection');
-      navigate(`/profile?partnerId=${partner.telegramId}`);
+      navigate(`/profile/${partner.telegramId}`);
     }
   };
 
@@ -391,6 +392,9 @@ export default function Profile() {
       // Remove partner from local database
       await database.removePartner(parseInt(user.id));
       
+      // Refresh partner state immediately
+      await refreshPartner();
+      
       // Show success toast
       toast({
         title: "Связь разорвана",
@@ -398,9 +402,9 @@ export default function Profile() {
         duration: 5000
       });
       
-      // Force page reload to ensure clean state
+      // Navigate to home page
       setTimeout(() => {
-        window.location.href = '/';
+        navigate('/');
       }, 1000);
       
     } catch (error) {
@@ -490,7 +494,26 @@ export default function Profile() {
         )}
 
         {/* Profile Header */}
-        <div className={`bg-white dark:bg-gray-800 pb-6 px-6 rounded-b-3xl shadow-sm ${isViewingPartner ? '' : 'pt-8'}`}>
+        <div className={`bg-white dark:bg-gray-800 pb-6 px-6 rounded-b-3xl shadow-sm relative ${isViewingPartner ? '' : 'pt-8'}`}>
+          {/* Settings button - only for own profile */}
+          {!isViewingPartner && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute top-4 right-4 p-2"
+              onClick={() => {
+                telegramService.hapticFeedback('selection');
+                // For now, just show a toast - can implement settings later
+                toast({
+                  title: "Настройки",
+                  description: "Функция настроек будет добавлена в следующем обновлении",
+                  duration: 3000
+                });
+              }}
+            >
+              <Settings className="w-5 h-5" />
+            </Button>
+          )}
           {/* Profile Avatar and Info */}
           <div className="text-center mb-6">
             <div className="relative inline-block">

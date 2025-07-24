@@ -99,7 +99,7 @@ export default function Home() {
   const handlePartnerAvatarClick = () => {
     if (partner) {
       telegramService.hapticFeedback('selection');
-      navigate(`/profile?partnerId=${partner.telegramId}`);
+      navigate(`/profile/${partner.telegramId}`);
     }
   };
 
